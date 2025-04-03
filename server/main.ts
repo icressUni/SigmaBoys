@@ -1,6 +1,8 @@
 import { Application } from "jsr:@oak/oak/application";
 import { Router } from "jsr:@oak/oak/router";
+import { oakCors } from "@tajpouria/cors";
 import routeStaticFilesFrom from "./util/routeStaticFilesFrom.ts";
+import data from "./api/data.json" with { type: "json" };
 
 export const app = new Application();
 const router = new Router();
