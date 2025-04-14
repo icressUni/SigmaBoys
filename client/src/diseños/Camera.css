@@ -27,12 +27,12 @@ button {
   background-color: #2a23ff7e;
   color: #fff;
   border: 1px solid #0b0060ab;
-  padding: 0.75rem 1.5rem;      /* padding vertical y horizontal */
-  border-radius: 12px;          /* bordes redondeados */
-  font-size: 1rem;              /* tamaño de texto */
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  margin-top: 1.5rem;           /* espacio entre el video y el botón */
+  margin-top: 1.5rem;
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -42,4 +42,9 @@ button:hover {
   background-color: #443bff9c;
 }
 
-
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 200px;
+}
