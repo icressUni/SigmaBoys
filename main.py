@@ -55,7 +55,7 @@ def reconocimiento_imagen(ruta_imagen, rostros_conocidos, nombres_conocidos):
     # Mostrar resultados
     for (top, right, bottom, left), codificacion_rostro in zip(ubicaciones_rostros, codificaciones_rostros):
         # Comparar el rostro con nuestra base de datos
-        coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro)
+        coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.4)  # Aumentar exigencia
         nombre = "Desconocido"
         
         # Usar la distancia facial para encontrar la mejor coincidencia
@@ -108,7 +108,7 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
         
         for codificacion_rostro in codificaciones_rostros:
             # Comparar con rostros conocidos
-            coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro)
+            coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.4)  # Aumentar exigencia
             nombre = "Desconocido"
             
             # Encontrar la mejor coincidencia
