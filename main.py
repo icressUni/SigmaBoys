@@ -5,6 +5,7 @@ import face_recognition
 import cv2
 import numpy as np
 import os
+import pickle
 
 def crear_base_de_datos_rostros(directorio_personas):
     """
@@ -38,6 +39,18 @@ def crear_base_de_datos_rostros(directorio_personas):
                         print(f"Error al procesar {ruta_completa}: {str(e)}")
     
     return rostros_conocidos, nombres_conocidos
+
+def cargar_modelo(ruta_modelo):
+    """
+    Carga el modelo de rostros conocidos desde un archivo.
+    """
+    if not os.path.exists(ruta_modelo):
+        print(f"El archivo de modelo {ruta_modelo} no existe. Crea el modelo primero.")
+        return [], []
+    
+    with open(ruta_modelo, 'rb') as modelo_file:
+        data = pickle.load(modelo_file)
+        return data["rostros"], data["nombres"]
 
 def reconocimiento_imagen(ruta_imagen, rostros_conocidos, nombres_conocidos):
     """
@@ -91,6 +104,10 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
     
     print("Presiona 'q' para salir")
     
+    rostro_seguido = None
+    ubicacion_seguida = None
+    tiempo_espera = 0
+    
     while True:
         ret, frame = captura.read()
         if not ret:
@@ -100,41 +117,59 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
         rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
         
-        # Encontrar rostros en el frame actual
-        ubicaciones_rostros = face_recognition.face_locations(rgb_small_frame)
-        codificaciones_rostros = face_recognition.face_encodings(rgb_small_frame, ubicaciones_rostros)
-        
-        nombres_rostros = []
-        
-        for codificacion_rostro in codificaciones_rostros:
-            # Comparar con rostros conocidos
-            coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.4)  # Aumentar exigencia
-            nombre = "Desconocido"
+        if rostro_seguido is None and tiempo_espera == 0:
+            # Encontrar rostros en el frame actual
+            ubicaciones_rostros = face_recognition.face_locations(rgb_small_frame)
+            codificaciones_rostros = face_recognition.face_encodings(rgb_small_frame, ubicaciones_rostros)
             
-            # Encontrar la mejor coincidencia
-            distancias_faciales = face_recognition.face_distance(rostros_conocidos, codificacion_rostro)
-            mejor_coincidencia = np.argmin(distancias_faciales) if len(distancias_faciales) > 0 else -1
-            
-            if mejor_coincidencia >= 0 and coincidencias[mejor_coincidencia]:
-                nombre = nombres_conocidos[mejor_coincidencia]
-            
-            nombres_rostros.append(nombre)
+            for ubicacion, codificacion_rostro in zip(ubicaciones_rostros, codificaciones_rostros):
+                # Comparar con rostros conocidos
+                coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.4)
+                nombre = "Desconocido"
+                
+                # Encontrar la mejor coincidencia
+                distancias_faciales = face_recognition.face_distance(rostros_conocidos, codificacion_rostro)
+                mejor_coincidencia = np.argmin(distancias_faciales) if len(distancias_faciales) > 0 else -1
+                
+                if mejor_coincidencia >= 0 and coincidencias[mejor_coincidencia]:
+                    nombre = nombres_conocidos[mejor_coincidencia]
+                
+                if nombre != "Desconocido":
+                    rostro_seguido = nombre
+                    ubicacion_seguida = ubicacion
+                    print(f"Rostro identificado: {nombre}")
+                    break
+                else:
+                    # Dibujar una caja con "Desconocido"
+                    top, right, bottom, left = [v * 4 for v in ubicacion]
+                    cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+                    cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+                    font = cv2.FONT_HERSHEY_DUPLEX
+                    cv2.putText(frame, "Desconocido", (left + 6, bottom - 6), font, 0.8, (255, 255, 255), 1)
+                    tiempo_espera = 90  # 3 segundos a 30 FPS
+        elif tiempo_espera > 0:
+            tiempo_espera -= 1
+        else:
+            # Actualizar la ubicación del rostro seguido
+            ubicaciones_rostros = face_recognition.face_locations(rgb_small_frame)
+            if ubicaciones_rostros:
+                ubicacion_seguida = ubicaciones_rostros[0]
+            else:
+                # Si el rostro sale del cuadro, reiniciar el seguimiento
+                rostro_seguido = None
+                ubicacion_seguida = None
         
-        # Mostrar resultados
-        for (top, right, bottom, left), nombre in zip(ubicaciones_rostros, nombres_rostros):
+        if rostro_seguido and ubicacion_seguida:
             # Escalar de vuelta las ubicaciones al tamaño original
-            top *= 4
-            right *= 4
-            bottom *= 4
-            left *= 4
+            top, right, bottom, left = [v * 4 for v in ubicacion_seguida]
             
-            # Dibujar un recuadro alrededor del rostro
+            # Dibujar un recuadro alrededor del rostro seguido
             cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
             
             # Dibujar una etiqueta con el nombre
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
-            cv2.putText(frame, nombre, (left + 6, bottom - 6), font, 0.8, (255, 255, 255), 1)
+            cv2.putText(frame, rostro_seguido, (left + 6, bottom - 6), font, 0.8, (255, 255, 255), 1)
         
         # Mostrar el frame resultante
         cv2.imshow('Reconocimiento Facial en Vivo', frame)
@@ -149,23 +184,19 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
 
 # Ejemplo de uso:
 if __name__ == "__main__":
-    # 1. Primero, organiza tus imágenes en una estructura como:
-    # ./personas_autorizadas/nombre_persona1/foto1.jpg, foto2.jpg, ...
-    # ./personas_autorizadas/nombre_persona2/foto1.jpg, foto2.jpg, ...
+    # Ruta del archivo de modelo
+    ruta_modelo = "./modelo_rostros.pkl"
     
-    # 2. Crear la base de datos de rostros conocidos
-    directorio_personas = "./personas_autorizadas"  # Ajusta esta ruta
+    # Cargar el modelo
+    rostros_conocidos, nombres_conocidos = cargar_modelo(ruta_modelo)
     
-    # Verifica si el directorio existe, si no, créalo
-    if not os.path.exists(directorio_personas):
-        os.makedirs(directorio_personas)
-        print(f"Directorio {directorio_personas} creado. Por favor, agrega imágenes de personas.")
-    
-    rostros_conocidos, nombres_conocidos = crear_base_de_datos_rostros(directorio_personas)
-    
-    if not rostros_conocidos:
-        print("No se encontraron rostros en la base de datos. Agrega imágenes al directorio.")
+    # Verificar si el modelo contiene datos
+    if not rostros_conocidos or not nombres_conocidos:
+        print("El modelo está vacío o no contiene datos válidos. Verifica que el archivo modelo_rostros.pkl fue generado correctamente.")
+        print(f"Rostros conocidos: {len(rostros_conocidos)}, Nombres conocidos: {len(nombres_conocidos)}")
     else:
+        print(f"Modelo cargado correctamente. Rostros conocidos: {len(rostros_conocidos)}, Nombres conocidos: {len(nombres_conocidos)}")
+        
         # 3. Para reconocimiento en una imagen:
         # reconocimiento_imagen("ruta_a_la_imagen.jpg", rostros_conocidos, nombres_conocidos)
         

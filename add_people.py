@@ -64,17 +64,11 @@ def take_pictures_and_save_with_gui(folder_path, canvas, video_label):
         else:
             video_label.config(text="No valid face detected. Please try again.")
 
-    def quit_capture():
-        cap.release()
-        video_label.config(text="Exiting capture.")
-        canvas.after_cancel(update_frame)
-
     # Start updating the frame immediately
     update_frame()
 
     # Add buttons for capture and quit
-    Button(canvas.master, text="Capture", command=capture_image).grid(row=3, column=0, padx=10, pady=5)
-    Button(canvas.master, text="Quit", command=quit_capture).grid(row=3, column=2, padx=10, pady=5)
+    Button(canvas.master, text="Capture", command=capture_image).grid(row=3, column=1, padx=10, pady=10)
 
 def import_image_and_save(folder_path):
     root = Tk()
@@ -135,6 +129,7 @@ def gui_main():
 
     root = Tk()
     root.title("SigmaBoys - Add People")
+    
 
     Label(root, text="Enter the name of the person:").grid(row=0, column=0, padx=10, pady=5)
     name_var = StringVar()
@@ -150,7 +145,7 @@ def gui_main():
     Radiobutton(root, text="Import Image", variable=option_var, value="2").grid(row=2, column=2, padx=10, pady=5)
 
     start_button = Button(root, text="Start", command=start_capture)
-    start_button.grid(row=3, column=1, padx=10, pady=10)
+    start_button.grid(row=3, column=1, padx=0, pady=10)
 
     status_label = Label(root, text="Please enter your name and email to create a folder before taking pictures.")
     status_label.grid(row=4, column=0, columnspan=3, pady=10)
