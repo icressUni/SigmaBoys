@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import "../diseños/Camera.css";
 
 function CameraPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getCamera = async () => {
@@ -25,7 +27,9 @@ function CameraPage() {
       <div className="video-container">
         <video ref={videoRef} autoPlay playsInline className="video-element" />
       </div>
-      <button className="login-button">Manual Login</button>
+      <button className="login-button" onClick={() => navigate("/manual-login")}>
+        Manual Login
+      </button>
     </div>
   );
 }
