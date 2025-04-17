@@ -6,7 +6,10 @@ function Home() {
 
   return (
     <div className="container">
-      <h1>Bienvenido</h1>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <h1>Bienvenido</h1>
+        <button onClick={() => navigate("/test_DB")}>Nuevo Botón</button>
+      </div>
       <div className="button-group">
         <button className="login-button" onClick={() => alert("Sección Admin no implementada aún")}>
           Admin
