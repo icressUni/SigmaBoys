@@ -1,0 +1,54 @@
+/* src/styles/global.css */
+
+:root {
+  /* Paleta base */
+  --primary-color: #007bff;         /* Azul vibrante */
+  --primary-color-hover: #0056b3;   /* Azul oscuro */
+  --bg-color: #f9fafb;              /* Fondo claro */
+  --text-color: #111827;            /* Gris oscuro */
+  --border-color: #d1d5db;          /* Gris claro */
+  --input-bg: #fff;                 /* Blanco */
+  --focus-color: #66cc66;
+  --header-bg: #38bdf8;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  padding-top: 3rem;
+  flex: 1;
+}
+
+/* NUEVO: clase para centrar contenido vertical y horizontalmente */
+main.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  font-weight: 600;
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+  padding: 1rem;
+  margin: 0 auto;
+}

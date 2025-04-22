@@ -1,0 +1,32 @@
+/* src/styles/index.css */
+
+@import 'global.css';
+@import 'button.css';
+@import 'login.css';
+@import 'header.css';
+@import 'camera.css';
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-container {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .button-group {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}

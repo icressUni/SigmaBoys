@@ -1,0 +1,22 @@
+/* src/styles/buttons.css */
+
+.btn {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 0.5rem;
+}
+
+.btn:hover {
+  background-color: var(--primary-color-hover);
+}
+
+.btn:focus {
+  outline: 2px solid var(--focus-color);
+  outline-offset: 2px;
+}

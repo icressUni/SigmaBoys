@@ -1,0 +1,70 @@
+.video-container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background-color: #111;
+  position: relative;
+}
+
+.video-element {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* ✅ Corregir efecto espejo */
+.video-element.flipped {
+  transform: scaleX(-1);
+}
+
+.camera-page {
+  text-align: center;
+  padding: 1rem;
+}
+
+.camera-page h1 {
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.camera-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.camera-status {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.camera-status.success {
+  background-color: rgba(102, 204, 102, 0.2);
+  color: #66cc66;
+}
+
+.camera-status.error {
+  background-color: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+}
+
+.login-button {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+  color: var(--text-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.login-button:hover {
+  background-color: rgba(42, 35, 255, 0.1);
+}
