@@ -14,8 +14,8 @@
     "react": "npm:react@^18.3.1",
     "react-dom": "npm:react-dom@^18.3.1",
     "react-router-dom": "npm:react-router-dom@^6.28.0",
-    "vite": "npm:vite@^5.4.11"
-
+    "vite": "npm:vite@^5.4.11",
+    "axios": "npm:axios@^0.21.1"
   },
   "compilerOptions": {
     "types": [

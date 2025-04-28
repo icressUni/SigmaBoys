@@ -1,3 +1,13 @@
+/* Contenedor principal */
+.camera-page {
+  font-family: Arial, sans-serif;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+/* Sección de cámara */
 .video-container {
   width: 100%;
   max-width: 640px;
@@ -9,62 +19,71 @@
   position: relative;
 }
 
+/* Estilo de la cámara */
 .video-element {
   width: 100%;
   display: block;
   object-fit: cover;
 }
 
-/* ✅ Corregir efecto espejo */
 .video-element.flipped {
   transform: scaleX(-1);
 }
 
-.camera-page {
-  text-align: center;
-  padding: 1rem;
-}
-
-.camera-page h1 {
-  margin-bottom: 2rem;
-  font-size: 2rem;
-}
-
-.camera-controls {
+/* Sección de resultados */
+.result-container {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.camera-status {
-  margin-top: 1rem;
-  padding: 0.5rem;
+.result-image {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ddd;
+}
+
+.result-info {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Estilos de las personas identificadas */
+.person {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 0.875rem;
+  background-color: #fff;
 }
 
-.camera-status.success {
-  background-color: rgba(102, 204, 102, 0.2);
-  color: #66cc66;
+/* Estado del sistema */
+.status {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
 }
 
-.camera-status.error {
-  background-color: rgba(255, 107, 107, 0.2);
-  color: #ff6b6b;
+.success {
+  background-color: #d4edda;
+  color: #155724;
 }
 
-.login-button {
-  margin-top: 1.5rem;
-  padding: 0.75rem 1.5rem;
-  background-color: transparent;
-  border: 1px solid var(--primary-color);
-  color: var(--text-color);
-  border-radius: 8px;
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Botón */
+button {
+  padding: 10px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
-.login-button:hover {
-  background-color: rgba(42, 35, 255, 0.1);
+button:hover {
+  background-color: #45a049;
 }
