@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Reconocimiento Facial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .section {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        .result-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .result-image {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+        }
+        .result-info {
+            flex: 1;
+            min-width: 300px;
+        }
+        .person {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .status {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sistema de Reconocimiento Facial</h1>
+    
+    <div class="container">
+        <div class="section" id="status-section">
+            <h2>Estado del Sistema</h2>
+            <div id="status" class="status">Comprobando estado de la API...</div>
+            <button onclick="checkStatus()">Comprobar estado</button>
+        </div>
+        
+        <div class="section">
+            <h2>Reconocimiento de Imagen</h2>
+            <p>Sube una imagen para identificar rostros:</p>
+            <input type="file" id="image-upload" accept="image/*">
+            <button onclick="recognizeFaces()">Reconocer rostros</button>
+            
+            <div id="loading" style="display:none; margin-top: 10px;">
+                Procesando imagen... Por favor espere.
+            </div>
+            
+            <div id="results" class="result-container" style="display:none; margin-top: 20px;">
+                <div id="result-image-container">
+                    <h3>Imagen Procesada</h3>
+                    <img id="result-image" class="result-image" src="" alt="Imagen procesada">
+                </div>
+                
+                <div class="result-info">
+                    <h3>Personas Identificadas</h3>
+                    <div id="persons-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL base de la API
+        const API_URL = 'http://localhost:5000/api';
+        
+        // Comprobar el estado de la API
+        async function checkStatus() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = 'Comprobando estado de la API...';
+            statusDiv.className = 'status';
+            
+            try {
+                const response = await fetch(`${API_URL}/status`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `API conectada correctamente: ${data.message}`;
+                    statusDiv.className = 'status success';
+                } else {
+                    statusDiv.innerHTML = `Error al conectar con la API: ${data.error}`;
+                    statusDiv.className = 'status error';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `Error al conectar con la API: ${error.message}`;
+                statusDiv.className = 'status error';
+                console.error('Error:', error);
+            }
+        }
+        
+        // Reconocer rostros en una imagen
+        async function recognizeFaces() {
+            const fileInput = document.getElementById('image-upload');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor selecciona una imagen');
+                return;
+            }
+            
+            // Mostrar indicador de carga
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            
+            const formData = new FormData();
+            formData.append('imagen', file);
+            
+            try {
+                const response = await fetch(`${API_URL}/reconocer`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayResults(data);
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`Error al procesar la imagen: ${error.message}`);
+                console.error('Error:', error);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        // Mostrar los resultados en la página
+        function displayResults(data) {
+            const resultImage = document.getElementById('result-image');
+            const personsList = document.getElementById('persons-list');
+            
+            // Mostrar la imagen procesada
+            resultImage.src = `data:image/jpeg;base64,${data.imagen_procesada}`;
+            
+            // Listar las personas identificadas
+            personsList.innerHTML = '';
+            
+            if (data.resultados.length === 0) {
+                personsList.innerHTML = '<p>No se encontraron rostros en la imagen.</p>';
+            } else {
+                data.resultados.forEach((persona, index) => {
+                    const personDiv = document.createElement('div');
+                    personDiv.className = 'person';
+                    
+                    const confianza = persona.confianza.toFixed(2);
+                    const colorStyle = persona.nombre === 'Desconocido' ? 'color: red;' : 'color: green;';
+                    
+                    personDiv.innerHTML = `
+                        <strong style="${colorStyle}">Persona ${index + 1}: ${persona.nombre}</strong>
+                        <div>Confianza: ${confianza}%</div>
+                    `;
+                    
+                    personsList.appendChild(personDiv);
+                });
+            }
+            
+            // Mostrar la sección de resultados
+            document.getElementById('results').style.display = 'flex';
+        }
+        
+        // Comprobar el estado al cargar la página
+        window.onload = function() {
+            checkStatus();
+        };
+    </script>
+</body>
+</html>
