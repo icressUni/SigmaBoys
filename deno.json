@@ -3,6 +3,8 @@
     "dev": "deno run -A --node-modules-dir=auto npm:vite",
     "build": "deno run -A --node-modules-dir=auto npm:vite build",
     "server:start": "deno run -A --node-modules-dir --watch ./server/main.ts",
+    "server:init-db": "deno run -A ./server/scripts/initDb.ts",
+    "server:seed": "deno run -A ./server/scripts/seedDb.ts",
     "serve": "deno task build && deno task server:start"
   },
   "imports": {
@@ -15,7 +17,6 @@
     "react-dom": "npm:react-dom@^18.3.1",
     "react-router-dom": "npm:react-router-dom@^6.28.0",
     "vite": "npm:vite@^5.4.11"
-
   },
   "compilerOptions": {
     "types": [

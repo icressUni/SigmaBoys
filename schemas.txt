@@ -1,0 +1,77 @@
+{
+  "Alumno": {
+    "id": {
+      "type": "integer",
+      "primaryKey": true,
+      "autoIncrement": true
+    },
+    "nombres": {
+      "type": "string",
+      "nullable": false
+    },
+    "apellidos": {
+      "type": "string",
+      "nullable": false
+    },
+    "rut": {
+      "type": "string",
+      "unique": true,
+      "maxLength": 13,
+      "nullable": false
+    },
+    "password": {
+      "type": "string",
+      "nullable": false
+    },
+    "admin": {
+      "type": "boolean",
+      "default": false,
+      "nullable": false
+    }
+  }
+}
+
+{
+  "Asistencia": {
+    "id": {
+      "type": "integer",
+      "primaryKey": true,
+      "autoIncrement": true
+    },
+    "alumnos_id": {
+      "type": "integer",
+      "nullable": false,
+      "relation": {
+        "model": "Alumno",
+        "field": "id"
+      }
+    },
+    "registro": {
+      "type": "string",
+      "format": "date-time",
+      "nullable": false
+    }
+  }
+}
+
+{
+  "Fotos": {
+    "id": {
+      "type": "integer",
+      "primaryKey": true,
+      "autoIncrement": true
+    },
+    "alumnos_id": {
+      "type": "integer",
+      "nullable": false,
+      "relation": {
+        "model": "Alumno",
+        "field": "id"
+      }
+    },
+    "url": {
+      "type": "string",
+      "nullable": false
+    }
+  }
+}
