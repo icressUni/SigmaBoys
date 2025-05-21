@@ -1,11 +1,104 @@
-// src/pages/AdminDashboard.tsx
-import React from "react";
+import { useState, useRef } from 'react';
+import Boton from "../componentes/Boton";
+import AlumnoCard from '../componentes/cardItem/AlumnoCard';
+import SearchBar from "../componentes/search/SearchBar";
+import DropdownMenu from "../componentes/dropdown/DropdownMenu";
+import CardGrid from "../componentes/grid/CardGrid";
+import alumnos from "../data/alumnos.json" with { type: "json" };
+import asistencias from "../data/asistencias.json" with { type: "json" };
+
+interface Asistencia {
+  id: number;
+  alumnos_id: number;
+  registro: string[];
+}
 
 const AdminDashboard = () => {
+  const [searchResults, setSearchResults] = useState(alumnos);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Todos");
+  const categories = ["Todos", "Nombres", "Apellidos", "RUT"];
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleSearchResults = (results: typeof alumnos) => {
+    setSearchResults(results);
+  };
+
+  const handleSelectCategory = (category: string) => {
+    setSelectedCategory(category);
+    setIsDropdownOpen(false);
+  };
+
+  const getScrollableContent = (alumnoId: number) => {
+    const alumnoAsistencias = asistencias.filter(
+      (asistencia: Asistencia) => asistencia.alumnos_id === alumnoId
+    );
+
+    return (
+      <div>
+        <h4 className="font-semibold mt-2">Asistencia Reciente</h4>
+        <ul className="text-left pl-4 list-disc">
+          {alumnoAsistencias.flatMap((asistencia: Asistencia) =>
+            asistencia.registro.map((fecha, idx) => (
+              <li key={`${asistencia.id}-${idx}`}>
+                {new Date(fecha).toLocaleDateString('es-ES')} - Presente
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+    );
+  };
+
   return (
     <div className="p-8 text-center">
-      <h1 className="text-3xl font-bold text-green-700">Bienvenido al Panel de Administración</h1>
-      <p className="mt-4 text-lg">Aquí puedes gestionar tus recursos administrativos.</p>
+      <h1 className="text-3xl font-bold text-green-700 mb-2">
+        Bienvenido al Panel de Administración
+      </h1>
+      <p className="mb-6 text-lg">Aquí puedes gestionar tus recursos administrativos.</p>
+
+      {/* Botón estratégico al principio */}
+      <div className="mb-10">
+        <Boton texto="Registro de rostro" destino="/registro-rostro" />
+      </div>
+
+      <div className="mb-8 w-full" ref={dropdownRef}>
+        <h2 className="text-2xl font-semibold mb-4">Buscar Alumnos</h2>
+        <div className="relative">
+          <SearchBar
+            data={alumnos}
+            onSearchResults={handleSearchResults}
+            categories={categories}
+            isDropdownOpen={isDropdownOpen}
+            setIsDropdownOpen={setIsDropdownOpen}
+            selectedCategory={selectedCategory}
+          />
+          <div style={{ position: 'relative', zIndex: 10 }}>
+            <DropdownMenu
+              isOpen={isDropdownOpen}
+              options={categories}
+              selectedOption={selectedCategory}
+              onSelect={handleSelectCategory}
+              position="left"
+              className="search-dropdown"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <CardGrid
+          data={searchResults}
+          gridHeight="600px"
+          columnCount={3}
+          renderItem={(alumno) => (
+            <AlumnoCard
+              alumno={alumno}
+              scrollableContent={getScrollableContent(alumno.id)}
+            />
+          )}
+        />
+      </div>
     </div>
   );
 };

@@ -1,6 +1,5 @@
-/* src/styles/header.css */
-
 .header {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fuente explícita para no heredar */
   background-color: var(--header-bg) !important;
   color: white;
   padding: 0.5rem 1rem;

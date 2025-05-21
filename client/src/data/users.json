@@ -1,14 +1,15 @@
-[
-  {
-    "username": "usuario1",
-    "password": "1234",
-    "role": "admin",
-    "inLab": false
-  },
-  {
-    "username": "user",
-    "password": "user123",
-    "role": "user",
-    "inLab":false
-  }
-]
+{
+  "adminPassword": "12345",
+  "users": [
+    {
+      "username": "usuario1",
+      "password": "1234",
+      "inLab": false
+    },
+    {
+      "username": "user",
+      "password": "user123",
+      "inLab": false
+    }
+  ]
+}

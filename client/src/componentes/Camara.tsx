@@ -1,20 +1,23 @@
-// src/componentes/Camara.tsx
 import { useEffect, useRef } from "react";
 
 interface CameraProps {
+  videoRef?: React.RefObject<HTMLVideoElement>;
   onError: (err: string) => void;
 }
 
-const Camera: React.FC<CameraProps> = ({ onError }) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null); // Guardar el stream para detenerlo
+const Camera: React.FC<CameraProps> = ({ videoRef, onError }) => {
+  const internalVideoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Usamos el videoRef externo si existe, sino el interno
+  const videoElementRef = videoRef || internalVideoRef;
 
   useEffect(() => {
     const getCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        if (videoElementRef.current) {
+          videoElementRef.current.srcObject = stream;
         }
         streamRef.current = stream;
       } catch (err) {
@@ -25,18 +28,15 @@ const Camera: React.FC<CameraProps> = ({ onError }) => {
 
     getCamera();
 
-    // Limpieza: detener cámara al desmontar el componente
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
-  }, [onError]);
+  }, [onError, videoElementRef]);
 
   return (
-    <div className="video-container">
-      <video ref={videoRef} autoPlay playsInline className="video-element flipped" />
-    </div>
+    <video ref={videoElementRef} autoPlay playsInline className="video-element flipped" />
   );
 };
 

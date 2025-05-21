@@ -1,3 +1,4 @@
+// src/pages/Home.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import Boton from "../componentes/Boton";
@@ -6,7 +7,7 @@ function Home() {
   const navigate = useNavigate();
 
   const handleAdminClick = () => {
-    navigate("/manual-login"); // Redirige al login
+    navigate("/admin"); // Ahora redirige a la ruta que solo pide contraseña
   };
 
   return (

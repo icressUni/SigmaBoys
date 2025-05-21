@@ -1,0 +1,162 @@
+[
+    {
+        "id": 1,
+        "nombres": "Juan",
+        "apellidos": "P\u00e9rez",
+        "rut": "75978423-4",
+        "password": "password1",
+        "admin": true
+    },
+    {
+        "id": 2,
+        "nombres": "Mar\u00eda",
+        "apellidos": "Gonz\u00e1lez",
+        "rut": "92161910-5",
+        "password": "password2",
+        "admin": false
+    },
+    {
+        "id": 3,
+        "nombres": "Carlos",
+        "apellidos": "Soto",
+        "rut": "55371845-8",
+        "password": "password3",
+        "admin": false
+    },
+    {
+        "id": 4,
+        "nombres": "Ana",
+        "apellidos": "Ram\u00edrez",
+        "rut": "28009907-2",
+        "password": "password4",
+        "admin": false
+    },
+    {
+        "id": 5,
+        "nombres": "Luis",
+        "apellidos": "Torres",
+        "rut": "95156627-1",
+        "password": "password5",
+        "admin": false
+    },
+    {
+        "id": 6,
+        "nombres": "Sof\u00eda",
+        "apellidos": "Flores",
+        "rut": "48352808-6",
+        "password": "password6",
+        "admin": false
+    },
+    {
+        "id": 7,
+        "nombres": "Pedro",
+        "apellidos": "Vargas",
+        "rut": "51023716-2",
+        "password": "password7",
+        "admin": false
+    },
+    {
+        "id": 8,
+        "nombres": "Camila",
+        "apellidos": "Rojas",
+        "rut": "75402229-0",
+        "password": "password8",
+        "admin": false
+    },
+    {
+        "id": 9,
+        "nombres": "Andr\u00e9s",
+        "apellidos": "Castillo",
+        "rut": "26860358-0",
+        "password": "password9",
+        "admin": false
+    },
+    {
+        "id": 10,
+        "nombres": "Valentina",
+        "apellidos": "Silva",
+        "rut": "36794825-3",
+        "password": "password10",
+        "admin": false
+    },
+    {
+        "id": 11,
+        "nombres": "Diego",
+        "apellidos": "Mendoza",
+        "rut": "10564511-1",
+        "password": "password11",
+        "admin": false
+    },
+    {
+        "id": 12,
+        "nombres": "Fernanda",
+        "apellidos": "Cort\u00e9s",
+        "rut": "78345162-9",
+        "password": "password12",
+        "admin": false
+    },
+    {
+        "id": 13,
+        "nombres": "Ricardo",
+        "apellidos": "Navarro",
+        "rut": "56703366-6",
+        "password": "password13",
+        "admin": false
+    },
+    {
+        "id": 14,
+        "nombres": "Josefina",
+        "apellidos": "Reyes",
+        "rut": "28299457-0",
+        "password": "password14",
+        "admin": false
+    },
+    {
+        "id": 15,
+        "nombres": "Tom\u00e1s",
+        "apellidos": "Contreras",
+        "rut": "72901954-4",
+        "password": "password15",
+        "admin": false
+    },
+    {
+        "id": 16,
+        "nombres": "Isidora",
+        "apellidos": "Espinoza",
+        "rut": "82544341-2",
+        "password": "password16",
+        "admin": false
+    },
+    {
+        "id": 17,
+        "nombres": "Felipe",
+        "apellidos": "Fuentes",
+        "rut": "81329688-2",
+        "password": "password17",
+        "admin": false
+    },
+    {
+        "id": 18,
+        "nombres": "Daniela",
+        "apellidos": "Guzm\u00e1n",
+        "rut": "44801884-5",
+        "password": "password18",
+        "admin": false
+    },
+    {
+        "id": 19,
+        "nombres": "Mart\u00edn",
+        "apellidos": "Herrera",
+        "rut": "28863690-9",
+        "password": "password19",
+        "admin": false
+    },
+    {
+        "id": 20,
+        "nombres": "Paula",
+        "apellidos": "Campos",
+        "rut": "43174900-8",
+        "password": "password20",
+        "admin": false
+    }
+]

@@ -1,17 +1,24 @@
-/* Contenedor principal */
+/* src/styles/camera.css */
+
+/* Contenedor principal: no aplica font-family ni texto centrado aquí */
 .camera-page {
-  font-family: Arial, sans-serif;
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
   line-height: 1.6;
 }
 
-/* Sección de cámara */
+/* Contenedor que aplica Arial y centrado solo al contenido de cámara */
+.camera-content {
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+/* Contenedor de la cámara */
 .video-container {
   width: 100%;
   max-width: 640px;
-  margin: 0 auto;
+  margin: 20px auto 40px auto;
   overflow: hidden;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -19,71 +26,30 @@
   position: relative;
 }
 
-/* Estilo de la cámara */
+/* Video cámara */
 .video-element {
   width: 100%;
   display: block;
   object-fit: cover;
+  border-radius: 12px;
 }
 
 .video-element.flipped {
   transform: scaleX(-1);
 }
 
-/* Sección de resultados */
-.result-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-.result-image {
-  max-width: 100%;
-  height: auto;
-  border: 1px solid #ddd;
-}
-
-.result-info {
-  flex: 1;
-  min-width: 300px;
-}
-
-/* Estilos de las personas identificadas */
-.person {
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background-color: #fff;
-}
-
-/* Estado del sistema */
-.status {
-  padding: 10px;
-  margin-bottom: 10px;
-  border-radius: 4px;
-}
-
-.success {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.error {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
 /* Botón */
-button {
+button.login-button {
   padding: 10px 15px;
   background-color: #4CAF50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
 }
 
-button:hover {
+button.login-button:hover {
   background-color: #45a049;
 }
