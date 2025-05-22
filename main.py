@@ -6,6 +6,8 @@ import cv2
 import numpy as np
 import os
 import pickle
+import json
+from datetime import datetime
 
 def crear_base_de_datos_rostros(directorio_personas):
     """
@@ -68,7 +70,7 @@ def reconocimiento_imagen(ruta_imagen, rostros_conocidos, nombres_conocidos):
     # Mostrar resultados
     for (top, right, bottom, left), codificacion_rostro in zip(ubicaciones_rostros, codificaciones_rostros):
         # Comparar el rostro con nuestra base de datos
-        coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.4)  # Aumentar exigencia
+        coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.6)  # Menos exigente
         nombre = "Desconocido"
         
         # Usar la distancia facial para encontrar la mejor coincidencia
@@ -103,7 +105,11 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
         return
     
     print("Presiona 'q' para salir")
-    
+    print("Presiona 'r' para guardar JSON de la persona identificada")
+
+    # Diccionario de correos de ejemplo (ajusta según tus datos reales)
+    correos = {nombre: f"{nombre.lower()}@ejemplo.com" for nombre in nombres_conocidos}
+
     rostro_seguido = None
     ubicacion_seguida = None
     tiempo_espera = 0
@@ -124,7 +130,7 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
             
             for ubicacion, codificacion_rostro in zip(ubicaciones_rostros, codificaciones_rostros):
                 # Comparar con rostros conocidos
-                coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.4)
+                coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.6)
                 nombre = "Desconocido"
                 
                 # Encontrar la mejor coincidencia
@@ -140,20 +146,25 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
                     print(f"Rostro identificado: {nombre}")
                     break
                 else:
-                    # Dibujar una caja con "Desconocido"
-                    top, right, bottom, left = [v * 4 for v in ubicacion]
-                    cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
-                    cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
-                    font = cv2.FONT_HERSHEY_DUPLEX
-                    cv2.putText(frame, "Desconocido", (left + 6, bottom - 6), font, 0.8, (255, 255, 255), 1)
-                    tiempo_espera = 90  # 3 segundos a 30 FPS
+                    # Seguir al rostro desconocido hasta que salga del cuadro
+                    rostro_seguido = "Desconocido"
+                    ubicacion_seguida = ubicacion
+                    print("Rostro desconocido detectado, siguiendo hasta que salga del cuadro.")
+                    break
         elif tiempo_espera > 0:
             tiempo_espera -= 1
         else:
             # Actualizar la ubicación del rostro seguido
             ubicaciones_rostros = face_recognition.face_locations(rgb_small_frame)
             if ubicaciones_rostros:
-                ubicacion_seguida = ubicaciones_rostros[0]
+                # Buscar la ubicación más cercana a la anterior
+                if ubicacion_seguida is not None:
+                    # Calcular la distancia entre ubicaciones
+                    distancias = [np.linalg.norm(np.array(ubicacion_seguida) - np.array(u)) for u in ubicaciones_rostros]
+                    idx_min = np.argmin(distancias)
+                    ubicacion_seguida = ubicaciones_rostros[idx_min]
+                else:
+                    ubicacion_seguida = ubicaciones_rostros[0]
             else:
                 # Si el rostro sale del cuadro, reiniciar el seguimiento
                 rostro_seguido = None
@@ -164,19 +175,56 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
             top, right, bottom, left = [v * 4 for v in ubicacion_seguida]
             
             # Dibujar un recuadro alrededor del rostro seguido
-            cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+            color = (0, 255, 0) if rostro_seguido != "Desconocido" else (0, 0, 255)
+            cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
             
             # Dibujar una etiqueta con el nombre
-            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 255, 0), cv2.FILLED)
+            cv2.rectangle(frame, (left, bottom - 35), (right, bottom), color, cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, rostro_seguido, (left + 6, bottom - 6), font, 0.8, (255, 255, 255), 1)
         
         # Mostrar el frame resultante
         cv2.imshow('Reconocimiento Facial en Vivo', frame)
         
-        # Salir con la tecla 'q'
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
             break
+        elif key == ord('r') and rostro_seguido and rostro_seguido != "Desconocido":
+            # Obtener hora y fecha actual
+            hora_actual = datetime.now()
+            hora_str = hora_actual.strftime("%H:%M:%S")
+            fecha_str = hora_actual.strftime("%Y-%m-%d")
+
+            # Cargar correos reales desde emails.json
+            try:
+                with open("emails.json", "r") as f:
+                    correos_real = json.load(f)
+            except Exception:
+                correos_real = {}
+
+            correo = correos_real.get(rostro_seguido, f"{rostro_seguido.lower()}@ejemplo.com")
+            json_filename = f"registros_{fecha_str}.json"
+
+            # Leer el archivo si existe, si no crear estructura vacía
+            if os.path.exists(json_filename):
+                with open(json_filename, "r") as f:
+                    data = json.load(f)
+            else:
+                data = {}
+
+            # Estructura: correo, nombre, y registros
+            if correo not in data:
+                data[correo] = {
+                    "nombre": rostro_seguido,
+                    "registros": []
+                }
+            # Solo agregar la hora a la lista de registros
+            data[correo]["registros"].append(hora_str)
+
+            # Guardar el archivo actualizado
+            with open(json_filename, "w") as f:
+                json.dump(data, f, indent=4, ensure_ascii=False)
+            print(f"Registro guardado bajo el correo {correo} en {json_filename}")
     
     # Liberar recursos
     captura.release()
