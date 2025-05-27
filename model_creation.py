@@ -45,13 +45,24 @@ def crear_y_guardar_modelo(directorio_personas, ruta_modelo):
 if __name__ == "__main__":
     # Directorio base que contiene la carpeta personas_autorizadas
     directorio_base = "./"
-    ruta_modelo = "./modelo_rostros.pkl"
+    modelo_dir = "./model"
+    ruta_modelo = os.path.join(modelo_dir, "modelo_rostros.pkl")
+
+    # Crear la carpeta 'model' si no existe
+    if not os.path.exists(modelo_dir):
+        os.makedirs(modelo_dir)
     
-    # Crear y guardar el modelo
-    crear_y_guardar_modelo(directorio_base, ruta_modelo)
-    
-    # Verificar si el modelo fue creado correctamente
-    if os.path.exists(ruta_modelo):
-        print(f"Modelo creado correctamente en {ruta_modelo}")
-    else:
-        print("Error: No se pudo crear el modelo.")
+    while True:
+        entrada = input("Presiona ENTER para crear y guardar el modelo (o escribe 'back' para salir)...")
+        if entrada.strip().lower() == "back":
+            print("Saliendo del programa.")
+            break
+        
+        # Crear y guardar el modelo
+        crear_y_guardar_modelo(directorio_base, ruta_modelo)
+        
+        # Verificar si el modelo fue creado correctamente
+        if os.path.exists(ruta_modelo):
+            print(f"Modelo creado correctamente en {ruta_modelo}")
+        else:
+            print("Error: No se pudo crear el modelo.")
