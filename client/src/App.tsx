@@ -1,15 +1,12 @@
 // src/App.tsx
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "@pages/Home";
-import CameraPage from "@pages/CameraPage";
-import LoginPage from "@pages/LoginPage";
 import AdminDashboard from "@pages/AdminDashboard";
-import AdminAccessPage from "@pages/AdminAccessPage";
-import RegistroRostro from "@pages/RegistroRostro";  // <-- Importa la página RegistroRostro
 import Header from "@components/Header";
 import LoadingScreen from "@components/LoadingScreen";
 import { useEffect, useState } from "react";
-import "./styles/index.css";
+import { LanguageProvider } from "./lenguage/LenguageContext"; // ✅ Importar el contexto de idioma
+import "./styles/index.css"; // Importar estilos globales
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -26,21 +23,20 @@ function App() {
   }
 
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/lab-tracker" element={<CameraPage />} />
-            <Route path="/manual-login" element={<LoginPage />} />
-            <Route path="/admin" element={<AdminAccessPage />} />
-            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-            <Route path="/registro-rostro" element={<RegistroRostro />} /> {/* Aquí agregas la ruta */}
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <LanguageProvider> {/* ✅ Proveedor del contexto de idioma envuelve toda la app */}
+      <Router>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow pt-16"> {/* pt-16 para no tapar con el header fijo */}
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/admin" element={<Navigate to="/" replace />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </LanguageProvider>
   );
 }
 

@@ -1,26 +1,32 @@
-import { useState, useRef } from 'react';
-import Boton from "../componentes/Boton";
-import AlumnoCard from '../componentes/cardItem/AlumnoCard';
-import SearchBar from "../componentes/search/SearchBar";
-import DropdownMenu from "../componentes/dropdown/DropdownMenu";
-import CardGrid from "../componentes/grid/CardGrid";
-import alumnos from "../data/alumnos.json" with { type: "json" };
-import asistencias from "../data/asistencias.json" with { type: "json" };
+// pages/AdminDashboard.tsx
+import { useState, useRef } from "react";
+import alumnosData from "../data/alumnos.json";
+import fotosData from "../data/fotos.json";
+import asistenciasData from "../data/asistencias.json";
 
-interface Asistencia {
-  id: number;
-  alumnos_id: number;
-  registro: string[];
-}
+import SearchBar from "../componentes/SearchBar";
+import DropdownBar from "../componentes/DropdownBar";
+import CardGrid from "../componentes/CardGrid";
+import styles from "../styles/AdminDashboard.module.css";
+import { useLanguage } from "../lenguage/LenguageContext";
 
 const AdminDashboard = () => {
-  const [searchResults, setSearchResults] = useState(alumnos);
+  const { translations } = useLanguage();
+
+  const categories = [
+    translations.category_Todos || "Todos",
+    translations.category_Nombre || "Nombre",
+    translations.category_Correo || "Correo",
+    translations.category_Especialidad || "Especialidad",
+  ];
+
+  const [searchResults, setSearchResults] = useState(alumnosData);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
-  const categories = ["Todos", "Nombres", "Apellidos", "RUT"];
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleSearchResults = (results: typeof alumnos) => {
+  const handleSearchResults = (results: typeof alumnosData) => {
     setSearchResults(results);
   };
 
@@ -29,75 +35,43 @@ const AdminDashboard = () => {
     setIsDropdownOpen(false);
   };
 
-  const getScrollableContent = (alumnoId: number) => {
-    const alumnoAsistencias = asistencias.filter(
-      (asistencia: Asistencia) => asistencia.alumnos_id === alumnoId
-    );
-
-    return (
-      <div>
-        <h4 className="font-semibold mt-2">Asistencia Reciente</h4>
-        <ul className="text-left pl-4 list-disc">
-          {alumnoAsistencias.flatMap((asistencia: Asistencia) =>
-            asistencia.registro.map((fecha, idx) => (
-              <li key={`${asistencia.id}-${idx}`}>
-                {new Date(fecha).toLocaleDateString('es-ES')} - Presente
-              </li>
-            ))
-          )}
-        </ul>
-      </div>
-    );
-  };
-
   return (
-    <div className="p-8 text-center">
-      <h1 className="text-3xl font-bold text-green-700 mb-2">
-        Bienvenido al Panel de Administración
-      </h1>
-      <p className="mb-6 text-lg">Aquí puedes gestionar tus recursos administrativos.</p>
+    <div className={styles.container}>
+      <h1 className={styles.header}>{translations.welcome}</h1>
 
-      {/* Botón estratégico al principio */}
-      <div className="mb-10">
-        <Boton texto="Registro de rostro" destino="/registro-rostro" />
-      </div>
-
-      <div className="mb-8 w-full" ref={dropdownRef}>
-        <h2 className="text-2xl font-semibold mb-4">Buscar Alumnos</h2>
-        <div className="relative">
-          <SearchBar
-            data={alumnos}
-            onSearchResults={handleSearchResults}
+      <div ref={dropdownRef} className={styles.controlsRow}>
+        <div className={styles.dropdownWrapper}>
+          <DropdownBar
             categories={categories}
-            isDropdownOpen={isDropdownOpen}
-            setIsDropdownOpen={setIsDropdownOpen}
+            isOpen={isDropdownOpen}
+            setIsOpen={setIsDropdownOpen}
             selectedCategory={selectedCategory}
+            onSelectCategory={handleSelectCategory}
           />
-          <div style={{ position: 'relative', zIndex: 10 }}>
-            <DropdownMenu
-              isOpen={isDropdownOpen}
-              options={categories}
-              selectedOption={selectedCategory}
-              onSelect={handleSelectCategory}
-              position="left"
-              className="search-dropdown"
-            />
-          </div>
+        </div>
+
+        <div className={styles.searchWrapper}>
+          <SearchBar
+            data={alumnosData}
+            onSearchResults={handleSearchResults}
+            selectedCategory={selectedCategory}
+            placeholder={translations.searchPlaceholder || "Buscar..."}
+          />
         </div>
       </div>
 
-      <div className="mt-4">
-        <CardGrid
-          data={searchResults}
-          gridHeight="600px"
-          columnCount={3}
-          renderItem={(alumno) => (
-            <AlumnoCard
-              alumno={alumno}
-              scrollableContent={getScrollableContent(alumno.id)}
-            />
-          )}
-        />
+      <div className={styles.results}>
+        {searchResults.length > 0 ? (
+          <CardGrid
+            data={searchResults}
+            fotos={fotosData}
+            asistencias={asistenciasData}
+            columnCount={3}
+            gridHeight="auto"
+          />
+        ) : (
+          <p>{translations.noResults || "No se encontraron resultados."}</p>
+        )}
       </div>
     </div>
   );

@@ -1,24 +1,10 @@
-// src/pages/Home.tsx
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import Boton from "../componentes/Boton";
+import Login from "../componentes/Login";
 
 function Home() {
-  const navigate = useNavigate();
-
-  const handleAdminClick = () => {
-    navigate("/admin"); // Ahora redirige a la ruta que solo pide contraseña
-  };
-
   return (
     <main className="centered">
-      <div className="container">
-        <h1>Bienvenido</h1>
-        <div className="button-group">
-          <Boton texto="Admin" onClick={handleAdminClick} />
-          <Boton texto="Lab Tracker" destino="/lab-tracker" />
-        </div>
-      </div>
+      <Login backgroundColor="#ffffff" mode="admin" />
     </main>
   );
 }

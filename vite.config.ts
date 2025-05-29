@@ -20,7 +20,4 @@ export default defineConfig({
       '@pages': path.resolve(__dirname, './client/src/pages'),
     }
   },
-  optimizeDeps: {
-    include: ["face-api.js"],  // Incluye face-api.js en las dependencias si es necesario
-  },
 });
