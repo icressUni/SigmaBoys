@@ -1,14 +1,13 @@
-// pages/AdminDashboard.tsx
-import { useState, useRef } from "react";
-import alumnosData from "../data/alumnos.json";
-import fotosData from "../data/fotos.json";
-import asistenciasData from "../data/asistencias.json";
-
+import { useState, useRef, useEffect } from "react";
 import SearchBar from "../componentes/SearchBar";
 import DropdownBar from "../componentes/DropdownBar";
 import CardGrid from "../componentes/CardGrid";
 import styles from "../styles/AdminDashboard.module.css";
 import { useLanguage } from "../lenguage/LenguageContext";
+import { getAlumnos } from "../data/getAlumnos";
+import { getAsistencias } from "../data/getAsistencias";
+import { Alumno } from "../types/alumno";
+import { Asistencia } from "../types/asistencia";
 
 const AdminDashboard = () => {
   const { translations } = useLanguage();
@@ -20,13 +19,37 @@ const AdminDashboard = () => {
     translations.category_Especialidad || "Especialidad",
   ];
 
-  const [searchResults, setSearchResults] = useState(alumnosData);
+  const [alumnosData, setAlumnosData] = useState<Alumno[]>([]);
+  const [searchResults, setSearchResults] = useState<Alumno[]>([]);
+  const [asistencias, setAsistencias] = useState<Asistencia[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [error, setError] = useState<string | null>(null);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleSearchResults = (results: typeof alumnosData) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [alumnos, asistenciasData] = await Promise.all([
+          getAlumnos(),
+          getAsistencias(),
+        ]);
+        setAlumnosData(alumnos);
+        setSearchResults(alumnos);
+        setAsistencias(asistenciasData);
+        setError(null);
+      } catch (err) {
+        setError("No se pudo cargar la información. Revisa la conexión con la API.");
+        setAlumnosData([]);
+        setSearchResults([]);
+        setAsistencias([]);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleSearchResults = (results: Alumno[]) => {
     setSearchResults(results);
   };
 
@@ -60,19 +83,23 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className={styles.results}>
-        {searchResults.length > 0 ? (
-          <CardGrid
-            data={searchResults}
-            fotos={fotosData}
-            asistencias={asistenciasData}
-            columnCount={3}
-            gridHeight="auto"
-          />
-        ) : (
-          <p>{translations.noResults || "No se encontraron resultados."}</p>
-        )}
-      </div>
+      {error ? (
+        <p style={{ color: "red", marginTop: "1rem" }}>{error}</p>
+      ) : (
+        <div className={styles.results}>
+          {searchResults.length > 0 ? (
+            <CardGrid
+              data={searchResults}
+              fotos={[]} // Asegúrate de cargar y pasar las fotos si las tienes
+              asistencias={asistencias}
+              columnCount={3}
+              gridHeight="auto"
+            />
+          ) : (
+            <p>{translations.noResults || "No se encontraron resultados."}</p>
+          )}
+        </div>
+      )}
     </div>
   );
 };

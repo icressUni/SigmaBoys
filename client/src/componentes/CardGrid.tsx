@@ -1,4 +1,3 @@
-// componentes/CardGrid.tsx
 import React, { useState } from "react";
 import styles from "../styles/CardGrid.module.css";
 import AlumnoCard from "../componentes/AlumnoCard";
@@ -10,10 +9,15 @@ interface Foto {
   url: string[];
 }
 
+interface Registro {
+  entrada: string;
+  salida: string;
+}
+
 interface Asistencia {
   id: number;
   alumnos_id: number;
-  registro: string[];
+  registro: Registro[];
 }
 
 interface CardGridProps {
@@ -72,8 +76,8 @@ const CardGrid = ({
                 >
                   <AlumnoCard
                     alumno={alumno}
-                    scrollableContent={null}
                     fotos={alumnoFotos}
+                    asistencias={alumnoAsistencias}
                     isCompact={true}
                   />
                 </div>
@@ -83,7 +87,6 @@ const CardGrid = ({
         </div>
       </div>
 
-      {/* Modal sin botón de cerrar */}
       {expandedId !== null && (
         <div
           className={styles.modalOverlay}

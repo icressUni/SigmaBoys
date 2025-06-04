@@ -16,7 +16,7 @@ interface Registro {
 
 interface Asistencia {
   alumnos_id: number;
-  registro: Registro[];
+  registro?: Registro[];  // registro opcional para seguridad
 }
 
 interface AlumnoCardProps {
@@ -36,7 +36,8 @@ const AlumnoCard = ({
   const fotoAlumno = fotos.find((f) => f.alumno_id === alumno.id);
   const fotoURL = fotoAlumno?.foto_enviada || "/reconocimiento-facial.png";
 
-  const asistenciaAlumno = asistencias?.find((a) => a.alumnos_id === alumno.id);
+  // Aquí cambiamos find por tomar el primer elemento, porque 'asistencias' ya está filtrado
+  const asistenciaAlumno = asistencias?.[0];
 
   const { translations } = useLanguage();
 
@@ -50,19 +51,19 @@ const AlumnoCard = ({
 
       <div className={styles.info}>
         <h3>{alumno.nombre} {alumno.apellido}</h3>
-        <p className={styles.email}>{alumno.correo}</p> {/* NUEVO */}
+        <p className={styles.email}>{alumno.correo}</p>
         <p className={styles.especialidad}>{alumno.especialidad}</p>
         {!isCompact && asistenciaAlumno && (
           <>
             <h4>{translations["Registro_de_ingreso:"] || "Registro de ingreso:"}</h4>
             <ul style={{ listStyle: "none", padding: 0 }}>
-              {asistenciaAlumno.registro.map((r, i) => (
+              {(asistenciaAlumno.registro ?? []).map((r, i) => (
                 <li key={i} style={{ marginBottom: "1em" }}>
                   <div><strong>{translations["Entrada"] || "Entrada"}</strong></div>
-                  <div>{new Date(r.entrada).toLocaleString()}</div>
+                  <div>{r.entrada ? new Date(r.entrada).toLocaleString() : "-"}</div>
                   <div><strong>{translations["Salida"] || "Salida"}</strong></div>
-                  <div>{new Date(r.salida).toLocaleString()}</div>
-                  {i !== asistenciaAlumno.registro.length - 1 && (
+                  <div>{r.salida ? new Date(r.salida).toLocaleString() : "-"}</div>
+                  {i !== (asistenciaAlumno.registro?.length ?? 0) - 1 && (
                     <hr style={{ marginTop: "0.5em", borderColor: "#ccc" }} />
                   )}
                 </li>

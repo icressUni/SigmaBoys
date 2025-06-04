@@ -5,7 +5,7 @@ interface SearchBarProps {
   data: any[];
   onSearchResults: (results: any[]) => void;
   selectedCategory: string;
-  placeholder: string; // Texto del placeholder traducido
+  placeholder: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -17,44 +17,44 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    let results;
+    let results = data;
 
-    if (searchTerm.trim() === "") {
-      results = data;
-    } else if (selectedCategory.toLowerCase() === "todos") {
-      results = data.filter((item) =>
-        Object.values(item).some((value) =>
-          String(value)
-            .toLowerCase()
-            .includes(searchTerm.trim().toLowerCase())
-        )
-      );
-    }
+    const search = searchTerm.trim().toLowerCase();
+    const category = selectedCategory.toLowerCase();
 
-    // 🔧 Modificación específica para que el filtro "Nombre" busque en nombre y apellido
-    else if (selectedCategory.toLowerCase() === "nombre") {
-      results = data.filter((item) => {
-        const nombre = item.nombre?.toLowerCase() || "";
-        const apellido = item.apellido?.toLowerCase() || "";
-        const search = searchTerm.trim().toLowerCase();
-        return (
-          nombre.includes(search) || apellido.includes(search)
+    if (search !== "") {
+      if (category === "todos") {
+        results = data.filter((item) =>
+          Object.values(item).some((value) =>
+            String(value).toLowerCase().includes(search)
+          )
         );
-      });
-    }
-
-    // Resto de filtros por propiedad
-    else {
-      const key = selectedCategory.toLowerCase();
-      results = data.filter((item) =>
-        String(item[key])
-          .toLowerCase()
-          .includes(searchTerm.trim().toLowerCase())
-      );
+      } else if (category === "nombre") {
+        results = data.filter((item) => {
+          const nombre = item.nombre?.toLowerCase() || "";
+          const apellido = item.apellido?.toLowerCase() || "";
+          return nombre.includes(search) || apellido.includes(search);
+        });
+      } else {
+        results = data.filter((item) =>
+          String(item[category] || "")
+            .toLowerCase()
+            .includes(search)
+        );
+      }
     }
 
     onSearchResults(results);
-  }, [searchTerm, selectedCategory, data, onSearchResults]);
+  }, [searchTerm, selectedCategory, data]); // quitamos onSearchResults para evitar bucle
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleResetSearch = () => {
+    setSearchTerm("");
+    onSearchResults(data); // Reset manual
+  };
 
   return (
     <div className={styles.searchContainer}>
@@ -64,13 +64,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
             type="text"
             placeholder={placeholder}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleInputChange}
             className={styles.searchInput}
             aria-label="Buscar"
           />
           <button
             className={styles.searchButton}
-            onClick={() => onSearchResults(data)} // Botón puede resetear búsqueda si quieres
+            onClick={handleResetSearch}
             aria-label="Buscar"
             title="Buscar"
             type="button"
