@@ -21,6 +21,9 @@ UPLOAD_FOLDER = 'temp_uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Store the last ID retrieved from the website
+last_submission_id = None
+
 # Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -35,77 +38,24 @@ def image_to_base64(image_array):
         return base64.b64encode(encoded_image).decode('utf-8')
     return None
 
-@app.route('/webhook', methods=['POST'])
-def receive_form_submission():
-    try:
-        # Extract form data
-        form_data = request.form
-        
-        # Get name and surname
-        name = form_data.get('name', '')
-        surname = form_data.get('surname', '')
-        
-        # Check if the post request has the file part
-        if 'image' not in request.files:
-            return jsonify({'error': 'No image found in submission'}), 400
-            
-        file = request.files['image']
-        
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
-            
-        if file and allowed_file(file.filename):
-            # Secure the filename and save temporarily
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            
-            # Read the image with OpenCV
-            image = cv2.imread(filepath)
-            
-            # Process the image if needed (e.g., resize, convert color)
-            # image = cv2.resize(image, (width, height))
-            
-            # Create JSON with form data and image
-            submission_data = {
-                'name': name,
-                'surname': surname,
-                'image': {
-                    'format': 'base64',
-                    'data': image_to_base64(image),
-                    'shape': image.shape,
-                    'dtype': str(image.dtype)
-                }
-            }
-            
-            # Log the submission (excluding the image data for brevity)
-            log_data = submission_data.copy()
-            log_data['image']['data'] = f"[Base64 string of length {len(submission_data['image']['data'])}]"
-            logger.info(f"Received form submission: {json.dumps(log_data)}")
-            
-            # Clean up the temporary file
-            os.remove(filepath)
-            
-            return jsonify({'status': 'success', 'data': submission_data}), 200
-        
-        return jsonify({'error': 'File type not allowed'}), 400
-        
-    except Exception as e:
-        logger.error(f"Error processing form submission: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
 # Alternative route to handle submissions directly from Microsoft Power Automate
 @app.route('/api/form-submission', methods=['POST'])
 def receive_power_automate_submission():
     try:
+        global last_submission_id
+        
         # Power Automate typically sends JSON data
         data = request.json
         
-        # Extract name and surname
-        name = data.get('name', '')
-        surname = data.get('surname', '')
+        # Extract name, surname and ID
+        name = data.get('nombre', '')
+        surname = data.get('apellido', '')
+        submission_id = data.get('id', '')
+        
+        # Update the last submission ID if provided
+        if submission_id:
+            last_submission_id = submission_id
+            logger.info(f"Updated last submission ID to: {last_submission_id}")
         
         # Extract image data (assuming it's already base64 encoded)
         image_data = data.get('image', '')
@@ -128,18 +78,27 @@ def receive_power_automate_submission():
                 'shape': image.shape,
                 'dtype': str(image.dtype)
             }
+            
         }
         
+        print("submission_data", submission_data)
         # Log the submission
         log_data = submission_data.copy()
-        log_data['image']['data'] = f"[Base64 string of length {len(submission_data['image']['data'])}]"
+        #log_data['image']['data'] = f"[Base64 string of length {len(submission_data['image']['data'])}]"
         logger.info(f"Received Power Automate submission: {json.dumps(log_data)}")
-        
-        return jsonify({'status': 'success', 'data': submission_data}), 200
+          return jsonify({'status': 'success', 'data': submission_data}), 200
         
     except Exception as e:
         logger.error(f"Error processing Power Automate submission: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+# Endpoint to check the last submission ID
+@app.route('/api/last-submission-id', methods=['GET'])
+def get_last_submission_id():
+    if last_submission_id is not None:
+        return jsonify({'status': 'success', 'last_id': last_submission_id})
+    else:
+        return jsonify({'status': 'no_data', 'message': 'No submissions received yet'}), 404
 
 if __name__ == '__main__':
     logger.info("Starting Microsoft Forms webhook receiver")
