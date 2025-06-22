@@ -6,27 +6,66 @@
 }
 
 .grid {
-  display: grid;
-  gap: 1rem;
-  width: 100%;
+  display: none;
+}
+
+.listContainer {
   padding: 1rem;
+  overflow-y: auto;
 }
 
-/* Responsive layout */
-@media (max-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
+.nameList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
 }
 
-@media (max-width: 600px) {
-  .grid {
-    grid-template-columns: repeat(1, 1fr) !important;
-  }
+/* 🎯 Estilo horizontal y más ancho para cada tarjeta */
+.nameCard {
+  width: 90%;
+  max-width: 800px;
+  background-color: #fff;
+  border: 2px solid #000;
+  border-radius: 20px;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
 }
 
-.item {
-  transition: transform 0.2s ease-in-out;
+.nameCard:hover {
+  background-color: #f5f5f5;
+}
+
+/* Estilos alineados horizontalmente */
+.nameText {
+  font-size: 1.2rem;
+  font-weight: bold;
+  flex: 1;
+  text-align: left;
+}
+
+.email {
+  font-size: 1rem;
+  color: #1a73e8;
+  flex: 1;
+  text-align: center;
+}
+
+
+.especialidad {
+  font-size: 0.95rem;
+  color: #666;
+  flex: 1;
+  text-align: right;
 }
 
 .modalOverlay {
@@ -56,7 +95,6 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
-/* Elimina esto si ya estaba */
 .closeButton {
   display: none;
 }

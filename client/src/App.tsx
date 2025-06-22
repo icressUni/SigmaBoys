@@ -5,8 +5,8 @@ import AdminDashboard from "@pages/AdminDashboard";
 import Header from "@components/Header";
 import LoadingScreen from "@components/LoadingScreen";
 import { useEffect, useState } from "react";
-import { LanguageProvider } from "./lenguage/LenguageContext"; // ✅ Importar el contexto de idioma
-import "./styles/index.css"; // Importar estilos globales
+import { LanguageProvider } from "./lenguage/LenguageContext";
+import "./styles/index.css";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -23,11 +23,11 @@ function App() {
   }
 
   return (
-    <LanguageProvider> {/* ✅ Proveedor del contexto de idioma envuelve toda la app */}
+    <LanguageProvider>
       <Router>
         <div className="flex flex-col min-h-screen">
           <Header />
-          <main className="flex-grow pt-16"> {/* pt-16 para no tapar con el header fijo */}
+          <main className="flex-grow pt-16">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/admin" element={<Navigate to="/" replace />} />

@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "../styles/AlumnoCard.module.css";
 import { Alumno } from "../types/alumno";
-import { useLanguage } from "../lenguage/LenguageContext"; // ajusta ruta si hace falta
+import { useLanguage } from "../lenguage/LenguageContext";
 
 interface Foto {
   alumno_id: number;
@@ -16,7 +16,7 @@ interface Registro {
 
 interface Asistencia {
   alumnos_id: number;
-  registro?: Registro[];  // registro opcional para seguridad
+  registro?: Registro[];
 }
 
 interface AlumnoCardProps {
@@ -33,26 +33,18 @@ const AlumnoCard = ({
   asistencias,
   isCompact = false,
 }: AlumnoCardProps) => {
-  const fotoAlumno = fotos.find((f) => f.alumno_id === alumno.id);
-  const fotoURL = fotoAlumno?.foto_enviada || "/reconocimiento-facial.png";
-
-  // Aquí cambiamos find por tomar el primer elemento, porque 'asistencias' ya está filtrado
   const asistenciaAlumno = asistencias?.[0];
-
   const { translations } = useLanguage();
 
   return (
     <div className={styles.card}>
-      <img
-        src={fotoURL}
-        alt={`${alumno.nombre} ${alumno.apellido}`}
-        className={styles.image}
-      />
-
       <div className={styles.info}>
-        <h3>{alumno.nombre} {alumno.apellido}</h3>
-        <p className={styles.email}>{alumno.correo}</p>
+        <div className={styles.headerRow}>
+          <h3 className={styles.nombre}>{alumno.nombre} {alumno.apellido}</h3>
+          <p className={styles.email}>{alumno.correo}</p>
+        </div>
         <p className={styles.especialidad}>{alumno.especialidad}</p>
+
         {!isCompact && asistenciaAlumno && (
           <>
             <h4>{translations["Registro_de_ingreso:"] || "Registro de ingreso:"}</h4>

@@ -1,31 +1,16 @@
 // src/componentes/Boton.tsx
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import styles from "../styles/Button.module.css"; // Asegúrate de que el nombre coincida exactamente
+import styles from "../styles/Button.module.css";
 
 interface BotonProps {
-  texto?: string;
-  destino?: string;
+  texto: string;
   onClick?: () => void;
+  type?: "button" | "submit" | "reset"; // Permitir definir el tipo de botón
 }
 
-const Boton: React.FC<BotonProps> = ({
-  texto = "Minijuego",
-  destino = "/minijuego",
-  onClick,
-}) => {
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    if (onClick) {
-      onClick();
-    } else if (destino) {
-      navigate(destino);
-    }
-  };
-
+const Boton = ({ texto, onClick, type = "button" }: BotonProps) => {
   return (
-    <button onClick={handleClick} className={styles.btn}>
+    <button onClick={onClick} type={type} className={styles.boton}>
       {texto}
     </button>
   );

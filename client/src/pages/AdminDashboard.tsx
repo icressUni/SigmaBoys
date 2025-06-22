@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
-import SearchBar from "../componentes/SearchBar";
-import DropdownBar from "../componentes/DropdownBar";
-import CardGrid from "../componentes/CardGrid";
+// src/pages/AdminDashboard.tsx
+import { useState, useRef, useEffect, useMemo } from "react";
+import SearchBar from "@components/SearchBar";
+import DropdownBar from "@components/DropdownBar";
+import CardGrid from "@components/CardGrid";
 import styles from "../styles/AdminDashboard.module.css";
 import { useLanguage } from "../lenguage/LenguageContext";
 import { getAlumnos } from "../data/getAlumnos";
@@ -12,12 +13,12 @@ import { Asistencia } from "../types/asistencia";
 const AdminDashboard = () => {
   const { translations } = useLanguage();
 
-  const categories = [
-    translations.category_Todos || "Todos",
-    translations.category_Nombre || "Nombre",
-    translations.category_Correo || "Correo",
-    translations.category_Especialidad || "Especialidad",
-  ];
+  const categories = useMemo(() => [
+    translations.category_Todos,
+    translations.category_Nombre,
+    translations.category_Correo,
+    translations.category_Especialidad,
+  ], [translations]);
 
   const [alumnosData, setAlumnosData] = useState<Alumno[]>([]);
   const [searchResults, setSearchResults] = useState<Alumno[]>([]);
@@ -58,6 +59,10 @@ const AdminDashboard = () => {
     setIsDropdownOpen(false);
   };
 
+  useEffect(() => {
+    setSelectedCategory(categories[0]);
+  }, [categories]);
+
   return (
     <div className={styles.container}>
       <h1 className={styles.header}>{translations.welcome}</h1>
@@ -78,7 +83,7 @@ const AdminDashboard = () => {
             data={alumnosData}
             onSearchResults={handleSearchResults}
             selectedCategory={selectedCategory}
-            placeholder={translations.searchPlaceholder || "Buscar..."}
+            placeholder={translations.searchPlaceholder}
           />
         </div>
       </div>

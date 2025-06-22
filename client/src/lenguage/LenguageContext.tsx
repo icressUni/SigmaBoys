@@ -21,8 +21,8 @@ const translationsMap: Record<string, Record<string, string>> = {
     // Dropdown categories
     category_Todos: "Todos",
     category_Nombre: "Nombre",
-    category_Apellido: "Apellido",
-    category_Categoría: "Categoría",
+    category_Correo: "Correo",
+    category_Especialidad: "Especialidad",
 
     //Card
     Registro_de_ingreso:"Registro de ingreso:",
@@ -43,8 +43,8 @@ const translationsMap: Record<string, Record<string, string>> = {
     // Dropdown categories
     category_Todos: "All",
     category_Nombre: "Name",
-    category_Apellido: "Last Name",
-    category_Categoría: "Category",
+    category_Correo: "Mail",
+    category_Especialidad: "Specialty",
     //Card
     Registro_de_ingreso:"Entry record:",
     Entrada: "Entry",

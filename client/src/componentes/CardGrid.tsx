@@ -35,7 +35,6 @@ const CardGrid = ({
   asistencias,
   gridHeight = "500px",
   gridWidth = "100%",
-  columnCount = 3,
 }: CardGridProps) => {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -50,41 +49,27 @@ const CardGrid = ({
   return (
     <>
       <div
-        className={styles.container}
+        className={styles.listContainer}
         style={{
           height: gridHeight,
           width: gridWidth,
+          overflowY: "auto",
+          padding: "1rem",
         }}
       >
-        <div
-          className={styles.grid}
-          style={{
-            gridTemplateColumns: `repeat(${columnCount}, 1fr)`,
-          }}
-        >
-          {data.map((alumno) => {
-            const alumnoFotos = fotos.filter((f) => f.alumno_id === alumno.id);
-            const alumnoAsistencias = asistencias.filter(
-              (a) => a.alumnos_id === alumno.id
-            );
-
-            return (
-              <div key={alumno.id} className={styles.item}>
-                <div
-                  onClick={() => handleOpen(alumno.id)}
-                  style={{ cursor: "pointer", width: "100%" }}
-                >
-                  <AlumnoCard
-                    alumno={alumno}
-                    fotos={alumnoFotos}
-                    asistencias={alumnoAsistencias}
-                    isCompact={true}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <ul className={styles.nameList}>
+          {data.map((alumno) => (
+            <li
+              key={alumno.id}
+              className={styles.nameCard}
+              onClick={() => handleOpen(alumno.id)}
+            >
+              <div className={styles.nameText}>{alumno.nombre} {alumno.apellido}</div>
+              <div className={styles.email}>{alumno.correo}</div>
+              <div className={styles.especialidad}>{alumno.especialidad}</div>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {expandedId !== null && (

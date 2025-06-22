@@ -1,4 +1,3 @@
-// api/main.ts
 import { serve } from "https://deno.land/std@0.204.0/http/server.ts";
 import { routes } from "./routes/index.ts";
 
@@ -6,7 +5,7 @@ const allowedOrigin = "http://localhost:3000";
 
 serve(async (req: Request) => {
   const url = new URL(req.url);
-  const handler = routes[url.pathname]; // ← Esto ya selecciona la ruta exacta
+  const handler = routes[url.pathname];
 
   if (req.method === "OPTIONS") {
     return new Response(null, {
