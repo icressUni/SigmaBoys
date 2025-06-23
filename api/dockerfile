@@ -1,0 +1,7 @@
+FROM denoland/deno:1.40.4
+
+WORKDIR /app
+
+COPY . .
+
+CMD ["run", "--allow-net", "--allow-env", "--allow-read", "main.ts"]

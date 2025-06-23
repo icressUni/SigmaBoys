@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./api
+    container_name: deno_api
+    ports:
+      - "8000:8000"
+    environment:
+      - PGAPPNAME=SigmaAPI
+      - JWT_SECRET=clave_secreta_segura
+
+  frontend:
+    build:
+      context: ./client
+    container_name: vite_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
