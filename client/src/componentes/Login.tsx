@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/Login.module.css";
 import { useLanguage } from "../lenguage/LenguageContext";
@@ -11,11 +11,19 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { translations } = useLanguage();
 
+  // ✅ Redirigir automáticamente si ya hay token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/admin-dashboard");
+    }
+  }, [navigate]);
+
   const handleLogin = async () => {
     setError(null);
 
     try {
-      const res = await fetch("http://localhost:8000/api/login", {  // Ajusta el puerto según tu backend
+      const res = await fetch("http://localhost:8000/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -24,11 +32,8 @@ const Login: React.FC = () => {
       });
 
       if (res.status === 200) {
-        // Login exitoso
         const data = await res.json();
-
-        // Aquí podrías guardar el token o info en localStorage/context si usas autenticación con JWT
-
+        localStorage.setItem("token", data.token);
         navigate("/admin-dashboard");
       } else if (res.status === 401) {
         setError(translations.loginError || "Correo o contraseña incorrectos");

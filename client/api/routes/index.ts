@@ -3,12 +3,16 @@ import { handleAsistenciasRequest } from "./asistencias.ts";
 import { handleProfesoresRequest } from "./profesores.ts";
 import { getConnection } from "../db.ts";
 import { handleLoginRequest } from "./login.ts";
+import { verifyToken } from "../utils/verifyToken.ts";
 
-// Ruta combinada: /api
 export async function handleCombinedRequest(req: Request): Promise<Response> {
+  const user = await verifyToken(req);
+  if (!user) {
+    return new Response("No autorizado", { status: 401 });
+  }
+
   try {
     const client = await getConnection();
-
     const result = await client.queryObject(`
       SELECT 
         a.id AS asistencia_id,
@@ -31,7 +35,6 @@ export async function handleCombinedRequest(req: Request): Promise<Response> {
   }
 }
 
-// Exporta todas las rutas correctamente
 export const routes: Record<string, (req: Request) => Promise<Response>> = {
   "/api": handleCombinedRequest,
   "/api/alumnos": handleAlumnosRequest,

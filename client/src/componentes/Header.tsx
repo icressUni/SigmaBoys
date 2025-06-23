@@ -9,44 +9,69 @@ const Header: React.FC = () => {
   const location = useLocation();
   const { translations } = useLanguage();
 
+  const isLoggedIn = Boolean(localStorage.getItem("token"));
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
+
   const handleGoBack = () => navigate(-1);
-  const handleGoHome = () => navigate("/");
 
   return (
     <header className={styles.header}>
-      {/* Zona izquierda: solo botones */}
+      {/* Zona izquierda: Logout o Volver */}
       <div className={styles.left}>
-        {location.pathname !== "/" && (
+        {isLoggedIn ? (
           <button
-            onClick={handleGoBack}
+            onClick={handleLogout}
             className={styles.iconButton}
-            aria-label={translations.back}
+            aria-label={translations.logout || "Cerrar sesión"}
+            title={translations.logout || "Cerrar sesión"}
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
           </button>
+        ) : (
+          location.pathname !== "/" && (
+            <button
+              onClick={handleGoBack}
+              className={styles.iconButton}
+              aria-label={translations.back}
+              title={translations.back}
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )
         )}
-
-        <button
-          onClick={handleGoHome}
-          disabled={location.pathname === "/"}
-          className={`${styles.iconButton} ${location.pathname === "/" ? styles.disabled : ""}`}
-          aria-label={translations.home}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        </button>
       </div>
 
       {/* Centro */}
-      <div className={styles.center}>
-        {translations.welcome}
-      </div>
+      <div className={styles.center}>{translations.welcome}</div>
 
-      {/* Derecha: Language Selector */}
+      {/* Derecha */}
       <div className={styles.right}>
         <div className={styles.languageSelectorWrapper}>
           <LanguageSelector />

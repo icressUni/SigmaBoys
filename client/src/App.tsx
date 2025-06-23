@@ -1,4 +1,3 @@
-// src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "@pages/Home";
 import AdminDashboard from "@pages/AdminDashboard";
@@ -7,6 +6,12 @@ import LoadingScreen from "@components/LoadingScreen";
 import { useEffect, useState } from "react";
 import { LanguageProvider } from "./lenguage/LenguageContext";
 import "./styles/index.css";
+
+// ✅ Componente para proteger rutas
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/" replace />;
+};
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -31,7 +36,14 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/admin" element={<Navigate to="/" replace />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route
+                path="/admin-dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
         </div>
