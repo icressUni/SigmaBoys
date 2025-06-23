@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import SearchBar from "@components/SearchBar";
 import DropdownBar from "@components/DropdownBar";
 import CardGrid from "@components/CardGrid";
+import AddUserButton from "@components/AddUserButton"; // <-- NUEVA LÍNEA
 import styles from "../styles/AdminDashboard.module.css";
 import { useLanguage } from "../lenguage/LenguageContext";
 import { getAlumnos } from "../data/getAlumnos";
@@ -105,6 +106,11 @@ const AdminDashboard = () => {
           )}
         </div>
       )}
+
+      {/* BOTÓN DE AÑADIR USUARIO */}
+      <div className={styles.floatingButtonWrapper}>
+        <AddUserButton />
+      </div>
     </div>
   );
 };

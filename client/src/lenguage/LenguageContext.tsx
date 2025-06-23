@@ -8,7 +8,7 @@ interface LanguageContextProps {
 
 const translationsMap: Record<string, Record<string, string>> = {
   es: {
-    welcome: "Bienvenido al Panel de Administración", // preferí esta versión más completa
+    welcome: "Bienvenido al Panel de Administración",
     back: "Volver atrás",
     home: "Inicio",
     loginTitle: "Clave de administrador",
@@ -17,20 +17,40 @@ const translationsMap: Record<string, Record<string, string>> = {
     loginError: "Contraseña incorrecta",
     searchPlaceholder: "Buscar...",
     noResults: "No se encontraron resultados.",
-    
+
     // Dropdown categories
     category_Todos: "Todos",
     category_Nombre: "Nombre",
     category_Correo: "Correo",
     category_Especialidad: "Especialidad",
 
-    //Card
-    Registro_de_ingreso:"Registro de ingreso:",
+    // Card
+    Registro_de_ingreso: "Registro de ingreso:",
     Entrada: "Entrada",
     Salida: "Salida",
+
+    // AddUserModal
+    addUser: "Añadir Usuario",
+    email: "Correo electrónico",
+    emailPlaceholder: "Ingresa el correo",
+    password: "Contraseña",
+    passwordPlaceholder: "Ingresa la contraseña",
+    confirmPassword: "Confirmar Contraseña",
+    confirmPasswordPlaceholder: "Confirma la contraseña",
+    role: "Rol",
+    selectRole: "-- Selecciona un rol --",
+    roleTeacher: "Profesor",
+    roleAssistant: "Ayudante",
+    cancel: "Cancelar",
+    createUser: "Crear Usuario",
+    creating: "Creando...",
+    required: "Campo requerido",
+    invalidEmail: "Email inválido",
+    passwordMinLength: "Mínimo 6 caracteres",
+    passwordMismatch: "Las contraseñas no coinciden",
   },
   en: {
-    welcome: "Welcome to the Admin Dashboard", // preferí esta versión más descriptiva
+    welcome: "Welcome to the Admin Dashboard",
     back: "Go back",
     home: "Home",
     loginTitle: "Admin password",
@@ -39,19 +59,39 @@ const translationsMap: Record<string, Record<string, string>> = {
     loginError: "Incorrect password",
     searchPlaceholder: "Search...",
     noResults: "No results found.",
-    
+
     // Dropdown categories
     category_Todos: "All",
     category_Nombre: "Name",
-    category_Correo: "Mail",
+    category_Correo: "Email",
     category_Especialidad: "Specialty",
-    //Card
-    Registro_de_ingreso:"Entry record:",
+
+    // Card
+    Registro_de_ingreso: "Entry record:",
     Entrada: "Entry",
     Salida: "Exit",
+
+    // AddUserModal
+    addUser: "Add User",
+    email: "Email",
+    emailPlaceholder: "Enter email",
+    password: "Password",
+    passwordPlaceholder: "Enter password",
+    confirmPassword: "Confirm Password",
+    confirmPasswordPlaceholder: "Confirm password",
+    role: "Role",
+    selectRole: "-- Select a role --",
+    roleTeacher: "Teacher",
+    roleAssistant: "Assistant",
+    cancel: "Cancel",
+    createUser: "Create User",
+    creating: "Creating...",
+    required: "This field is required",
+    invalidEmail: "Invalid email",
+    passwordMinLength: "Minimum 6 characters",
+    passwordMismatch: "Passwords do not match",
   },
 };
-
 
 // Crear el contexto
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
@@ -68,7 +108,6 @@ export const useLanguage = () => {
 // Proveedor del contexto
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState("es");
-
   const translations = translationsMap[language];
 
   return (

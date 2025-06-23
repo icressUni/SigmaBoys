@@ -1,60 +1,21 @@
-/* styles/AddUserButton.module.css */
+/* src/styles/AddUserButton.module.css */
+
 .addButton {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #007bff;
+  color: white;
   border: none;
   border-radius: 50%;
-  color: white;
+  width: 56px;
+  height: 56px;
   cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s ease;
-  z-index: 1000;
-  font-size: 24px;
+  transition: background-color 0.3s ease;
 }
 
 .addButton:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-}
-
-.addButton:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 15px rgba(102, 126, 234, 0.3);
-}
-
-.addButton svg {
-  transition: transform 0.2s ease;
-}
-
-.addButton:hover svg {
-  transform: rotate(90deg);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .addButton {
-    width: 50px;
-    height: 50px;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .addButton {
-    width: 45px;
-    height: 45px;
-    bottom: 1rem;
-    right: 1rem;
-    font-size: 18px;
-  }
+  background-color: #0056b3;
 }

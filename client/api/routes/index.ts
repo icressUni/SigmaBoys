@@ -1,7 +1,7 @@
-// api/routes/index.ts
 import { handleAlumnosRequest } from "./alumnos.ts";
 import { handleAsistenciasRequest } from "./asistencias.ts";
-import { getConnection } from "../db.ts"; // ← esto faltaba
+import { handleProfesoresRequest } from "./profesores.ts";
+import { getConnection } from "../db.ts";
 
 // Ruta combinada: /api
 export async function handleCombinedRequest(req: Request): Promise<Response> {
@@ -35,4 +35,5 @@ export const routes: Record<string, (req: Request) => Promise<Response>> = {
   "/api": handleCombinedRequest,
   "/api/alumnos": handleAlumnosRequest,
   "/api/asistencias": handleAsistenciasRequest,
+  "/api/profesores": handleProfesoresRequest,
 };
