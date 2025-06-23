@@ -2,23 +2,42 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "../styles/Login.module.css";
 import { useLanguage } from "../lenguage/LenguageContext";
-import Boton from "../componentes/Button"; // Asegúrate que este es el componente correcto
+import Boton from "../componentes/Button";
 
 const Login: React.FC = () => {
+  const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { translations } = useLanguage();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError(null);
 
-    const validPassword = "123456"; // Contraseña válida hardcodeada
+    try {
+      const res = await fetch("http://localhost:8000/api/login", {  // Ajusta el puerto según tu backend
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ correo, contrasena: password }),
+      });
 
-    if (password === validPassword) {
-      navigate("/admin-dashboard"); // Navegar al dashboard si es correcta
-    } else {
-      setError(translations.loginError || "Contraseña incorrecta");
+      if (res.status === 200) {
+        // Login exitoso
+        const data = await res.json();
+
+        // Aquí podrías guardar el token o info en localStorage/context si usas autenticación con JWT
+
+        navigate("/admin-dashboard");
+      } else if (res.status === 401) {
+        setError(translations.loginError || "Correo o contraseña incorrectos");
+      } else {
+        setError("Error en el servidor, intente más tarde");
+      }
+    } catch (error) {
+      setError("Error de conexión");
+      console.error(error);
     }
   };
 
@@ -33,6 +52,18 @@ const Login: React.FC = () => {
       >
         <div className={styles.formGroup}>
           <input
+            type="email"
+            value={correo}
+            onChange={(e) => setCorreo(e.target.value)}
+            className={styles.formControl}
+            placeholder={translations.emailPlaceholder || "Correo electrónico"}
+            required
+            autoComplete="username"
+          />
+        </div>
+
+        <div className={styles.formGroup}>
+          <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -42,6 +73,7 @@ const Login: React.FC = () => {
             autoComplete="current-password"
           />
         </div>
+
         {error && <div className={styles.alert}>{error}</div>}
         <Boton texto={translations.loginButton || "Entrar"} type="submit" />
       </form>
