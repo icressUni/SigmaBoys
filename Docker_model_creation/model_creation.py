@@ -23,7 +23,7 @@ def crear_y_guardar_modelo(directorio_personas, ruta_modelo):
                 if imagen_archivo.endswith(('.jpg', '.jpeg', '.png')):
                     ruta_completa = os.path.join(ruta_persona, imagen_archivo)
                     try:
-                        # Cargar la imagen y encontrar codificación facial
+                        # Cargar la imagen y encontrar codificación faciThe encoding al
                         imagen = face_recognition.load_image_file(ruta_completa)
                         codificaciones = face_recognition.face_encodings(imagen)
                         
