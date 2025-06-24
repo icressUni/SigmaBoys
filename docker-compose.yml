@@ -10,6 +10,8 @@ services:
     environment:
       - PGAPPNAME=SigmaAPI
       - JWT_SECRET=clave_secreta_segura
+    networks:
+      - app-network
 
   frontend:
     build:
@@ -19,3 +21,9 @@ services:
       - "3000:80"
     depends_on:
       - api
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
