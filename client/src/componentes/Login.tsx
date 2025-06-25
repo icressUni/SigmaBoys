@@ -11,7 +11,6 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { translations } = useLanguage();
 
-  // ✅ Redirigir automáticamente si ya hay token
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -22,14 +21,13 @@ const Login: React.FC = () => {
   const handleLogin = async () => {
     setError(null);
 
-    const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
+    // Solo uso process.env para que Jest lo pueda mockear bien
+    const API_URL = process.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
 
     try {
       const res = await fetch(`${API_URL}/api/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo, contrasena: password }),
       });
 
