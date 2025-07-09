@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "server:start": "deno run -A --no-prompt --watch ./api/main.ts"
+  },
+  "imports": {
+    "@oak/oak": "jsr:@oak/oak@^17.1.3",
+    "@std/assert": "jsr:@std/assert@1"
+  },
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "deno.ns"]
+  }
+}

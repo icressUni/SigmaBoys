@@ -1,0 +1,148 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modalContent {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.input,
+.select {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.inputError {
+  border-color: #e53935;
+}
+
+.fieldError {
+  color: #e53935;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.errorMessage {
+  background-color: #fdecea;
+  color: #b71c1c;
+  padding: 0.6rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.buttonGroup {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cancelButton,
+.submitButton {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.cancelButton {
+  background-color: #f44336;
+  color: white;
+}
+
+.cancelButton:hover {
+  background-color: #d32f2f;
+}
+
+.submitButton {
+  background-color: #007bff;
+  color: white;
+}
+
+.submitButton:hover {
+  background-color: #0056b3;
+}
+
+.cancelButton:disabled,
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50; /* verde */
+  color: white;
+  padding: 12px 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  z-index: 9999;
+  animation: fadeInOut 3s forwards;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
