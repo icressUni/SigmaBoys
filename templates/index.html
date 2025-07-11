@@ -11,6 +11,9 @@
       --accent-color: #d0bdf4;
       --text-color: #494c4e;
       --border-radius: 20px;
+      --success-color: #4CAF50;
+      --error-color: #f44336;
+      --warning-color: #ff9800;
     }
     
     * {
@@ -59,19 +62,33 @@
       margin-bottom: 20px;
     }
     
-    input {
+    .name-row {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .name-row input {
+      flex: 1;
+    }
+    
+    input, select {
       padding: 12px 15px;
       border: 1px solid #e1e1e1;
       border-radius: 10px;
       font-size: 1rem;
       transition: all 0.3s;
       width: 100%;
+      background-color: white;
     }
     
-    input:focus {
+    input:focus, select:focus {
       outline: none;
       border-color: var(--accent-color);
       box-shadow: 0 0 0 2px rgba(208, 189, 244, 0.3);
+    }
+    
+    select {
+      cursor: pointer;
     }
     
     video, canvas {
@@ -106,6 +123,52 @@
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+    
+    /* Notification styles */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1001;
+      min-width: 300px;
+      transform: translateX(400px);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      background-color: var(--success-color);
+    }
+    
+    .notification.error {
+      background-color: var(--error-color);
+    }
+    
+    .notification.warning {
+      background-color: var(--warning-color);
+    }
+    
+    .notification .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+      float: right;
+      cursor: pointer;
+      margin: -5px -5px 0 10px;
+      padding: 0;
+      width: auto;
+      height: auto;
     }
     
     /* Custom alert popup */
@@ -161,9 +224,25 @@
         padding: 20px;
       }
       
+      .name-row {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
       video, canvas {
         width: 100%;
         height: auto;
+      }
+      
+      .notification {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+        transform: translateY(-100px);
+      }
+      
+      .notification.show {
+        transform: translateY(0);
       }
     }
   </style>
@@ -175,8 +254,17 @@
     <div class="form-container">
       <!-- Campos de usuario -->
       <div class="input-group">
-        <input id="nameInput" type="text" placeholder="Nombre completo" required />
+        <div class="name-row">
+          <input id="nameInput" type="text" placeholder="Nombre" required />
+          <input id="lastNameInput" type="text" placeholder="Apellido" required />
+        </div>
         <input id="emailInput" type="email" placeholder="Correo electrónico" required />
+        <select id="specialtySelect" required>
+          <option value="">Seleccione una especialidad</option>
+          <option value="Informática">Informática</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Otro">Otro</option>
+        </select>
       </div>
     </div>
 
@@ -186,7 +274,7 @@
     <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
   </div>
 
-  <!-- Custom popup instead of alert -->
+  <!-- Custom popup for success -->
   <div class="popup-overlay" id="customPopup">
     <div class="popup-content">
       <h3>Foto guardada correctamente</h3>
@@ -200,13 +288,56 @@
     const canvas = document.getElementById('canvas');
     const snapBtn = document.getElementById('snap');
     const nameInput = document.getElementById('nameInput');
+    const lastNameInput = document.getElementById('lastNameInput');
     const emailInput = document.getElementById('emailInput');
+    const specialtySelect = document.getElementById('specialtySelect');
     const ctx = canvas.getContext('2d');
     const customPopup = document.getElementById('customPopup');
     const imageIdSpan = document.getElementById('imageId');
     const closePopupBtn = document.getElementById('closePopup');
 
     let cameraReady = false;
+
+    // Notification system
+    function showNotification(message, type = 'info', duration = 5000) {
+      // Remove existing notifications
+      const existingNotifications = document.querySelectorAll('.notification');
+      existingNotifications.forEach(notification => notification.remove());
+
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <button class="close-btn">&times;</button>
+        ${message}
+      `;
+
+      document.body.appendChild(notification);
+
+      // Show notification
+      setTimeout(() => {
+        notification.classList.add('show');
+      }, 100);
+
+      // Close button functionality
+      const closeBtn = notification.querySelector('.close-btn');
+      closeBtn.addEventListener('click', () => {
+        hideNotification(notification);
+      });
+
+      // Auto hide after duration
+      setTimeout(() => {
+        hideNotification(notification);
+      }, duration);
+    }
+
+    function hideNotification(notification) {
+      notification.classList.remove('show');
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.remove();
+        }
+      }, 300);
+    }
 
     // 1. Solicitar permiso y arrancar cámara
     window.addEventListener('load', () => {
@@ -218,19 +349,46 @@
         })
         .catch(err => {
           console.error('Error accediendo a la cámara:', err);
-          alert('No se pudo acceder a la cámara.');
+          showNotification('No se pudo acceder a la cámara', 'error');
         });
     });
 
-    // 2. Habilitar botón solo si nombre, email y cámara listos
+    // 2. Habilitar botón solo si todos los campos y la cámara están listos
     function checkReady() {
       const nameOk = nameInput.value.trim() !== '';
-      const emailOk = emailInput.checkValidity();
-      snapBtn.disabled = !(cameraReady && nameOk && emailOk);
+      const lastNameOk = lastNameInput.value.trim() !== '';
+      const emailOk = emailInput.value.trim() !== '' && emailInput.checkValidity();
+      const specialtyOk = specialtySelect.value !== '';
+      snapBtn.disabled = !(cameraReady && nameOk && lastNameOk && emailOk && specialtyOk);
     }
 
     nameInput.addEventListener('input', checkReady);
+    lastNameInput.addEventListener('input', checkReady);
     emailInput.addEventListener('input', checkReady);
+    specialtySelect.addEventListener('change', checkReady);
+
+    // Validación en tiempo real del correo
+    emailInput.addEventListener('blur', async (e) => {
+      const correo = e.target.value.trim();
+      if (correo && emailInput.checkValidity()) {
+        try {
+          const response = await fetch('/check_email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ correo: correo })
+          });
+          const result = await response.json();
+          if (result.exists) {
+            showNotification('Este correo ya está registrado', 'error');
+            emailInput.focus();
+          }
+        } catch (error) {
+          console.log('Error verificando correo:', error);
+        }
+      }
+    });
 
     // Custom popup functions
     function showPopup(id) {
@@ -244,29 +402,45 @@
 
     // 3. Capturar y enviar foto y datos
     snapBtn.addEventListener('click', () => {
+      // Capturar imagen
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
       const dataURL = canvas.toDataURL('image/png');
+
+      // Preparar datos en el formato que espera el backend
+      const studentData = {
+        imageData: dataURL,
+        nombre: nameInput.value.trim(),
+        apellido: lastNameInput.value.trim(),
+        correo: emailInput.value.trim(),
+        especialidad: specialtySelect.value
+      };
+
+      console.log('Enviando datos:', studentData);
 
       fetch('/save_photo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageData: dataURL,
-          name: nameInput.value.trim(),
-          email: emailInput.value.trim()
-        })
+        body: JSON.stringify(studentData)
       })
       .then(res => res.json())
       .then(data => {
+        console.log('Respuesta del servidor:', data);
         if (data.status === 'success') {
-          showPopup(data.id); // Use custom popup instead of alert
+          showPopup(data.id);
+          showNotification(data.message, 'success');
+          // Limpiar formulario después del éxito
+          nameInput.value = '';
+          lastNameInput.value = '';
+          emailInput.value = '';
+          specialtySelect.value = '';
+          checkReady();
         } else {
-          alert('Error guardando la foto');
+          showNotification(data.message || 'Error guardando la foto', 'error');
         }
       })
       .catch(err => {
         console.error('Error de fetch:', err);
-        alert('Error de comunicación con el servidor.');
+        showNotification('Error de comunicación con el servidor', 'error');
       });
     });
   </script>
