@@ -150,6 +150,8 @@ def gestionar_asistencia(alumno_id):
                 if exito:
                     # Si se subió exitosamente, eliminar el registro local
                     del registros[str(alumno_id)][fecha_hoy]
+                    if not registros[str(alumno_id)]:  # Si no quedan fechas, eliminar alumno
+                        del registros[str(alumno_id)]
                     guardar_registros_locales(registros)
                     return True, f"✅ SALIDA registrada: {timestamp_actual.strftime('%H:%M:%S')} - {mensaje}"
                 else:
@@ -168,6 +170,46 @@ def gestionar_asistencia(alumno_id):
             return True, f"📥 ENTRADA registrada localmente: {timestamp_actual.strftime('%H:%M:%S')} - Esperando salida"
         else:
             return False, "Error al guardar entrada local"
+
+def intentar_subir_registros_pendientes():
+    """
+    Intenta subir todos los registros pendientes que están completos
+    """
+    registros = cargar_registros_locales()
+    registros_eliminados = []
+    
+    for alumno_id, fechas in registros.items():
+        fechas_a_eliminar = []
+        for fecha, registro in fechas.items():
+            if 'entrada' in registro and 'salida' in registro:
+                # Registro completo, intentar subir
+                try:
+                    entrada_dt = datetime.fromisoformat(registro['entrada'])
+                    salida_dt = datetime.fromisoformat(registro['salida'])
+                    
+                    exito, mensaje = subir_asistencia_completa(int(alumno_id), entrada_dt, salida_dt)
+                    
+                    if exito:
+                        fechas_a_eliminar.append(fecha)
+                        print(f"✅ Registro subido: Alumno {alumno_id} - {fecha}")
+                except Exception as e:
+                    print(f"Error al procesar registro {alumno_id}/{fecha}: {e}")
+        
+        # Eliminar fechas que se subieron exitosamente
+        for fecha in fechas_a_eliminar:
+            del registros[alumno_id][fecha]
+            registros_eliminados.append((alumno_id, fecha))
+    
+    # Eliminar alumnos que no tienen fechas pendientes
+    alumnos_a_eliminar = [alumno_id for alumno_id, fechas in registros.items() if not fechas]
+    for alumno_id in alumnos_a_eliminar:
+        del registros[alumno_id]
+    
+    if registros_eliminados:
+        guardar_registros_locales(registros)
+        print(f"Se subieron {len(registros_eliminados)} registros pendientes")
+    
+    return len(registros_eliminados)
 
 def crear_base_de_datos_rostros(directorio_personas):
     """
@@ -383,7 +425,7 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
             exito, mensaje = gestionar_asistencia(alumno_id)
             
             if exito:
-                print(f"✅ {mensaje}")
+                print(f"{mensaje}")
             else:
                 print(f"❌ {mensaje}")
                 print("   Intenta registrar nuevamente")
@@ -395,51 +437,6 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
     captura.release()
     cv2.destroyAllWindows()
 
-def intentar_subir_registros_pendientes():
-    """
-    Intenta subir todos los registros pendientes que están completos
-    """
-    registros = cargar_registros_locales()
-    registros_eliminados = []
-    
-    for alumno_id, fechas in registros.items():
-        for fecha, registro in fechas.items():
-            if 'entrada' in registro and 'salida' in registro:
-                # Registro completo, intentar subir
-                try:
-                    entrada_dt = datetime.fromisoformat(registro['entrada'])
-                    salida_dt = datetime.fromisoformat(registro['salida'])
-                    
-                    exito, mensaje = subir_asistencia_completa(int(alumno_id), entrada_dt, salida_dt)
-                    
-                    if exito:
-                        registros_eliminados.append((alumno_id, fecha))
-                        print(f"✅ Registro subido: Alumno {alumno_id} - {fecha}")
-                except Exception as e:
-                    print(f"Error al procesar registro {alumno_id}/{fecha}: {e}")
-    
-    # Eliminar registros que se subieron exitosamente
-    for alumno_id, fecha in registros_eliminados:
-        del registros[alumno_id][fecha]
-        if not registros[alumno_id]:  # Si no quedan fechas, eliminar alumno
-            del registros[alumno_id]
-    
-    if registros_eliminados:
-        guardar_registros_locales(registros)
-        print(f"Se subieron {len(registros_eliminados)} registros pendientes")
-    
-    return len(registros_eliminados)
-    # Ruta del archivo de modelo
-    ruta_modelo = "./model/modelo_rostros.pkl"
-    
-    # Cargar el modelo
-    rostros_conocidos, nombres_conocidos = cargar_modelo(ruta_modelo)
-    
-    # Verificar si el modelo contiene datos
-    if not rostros_conocidos or not nombres_conocidos:
-        print("El modelo está vacío o no contiene datos válidos. Verifica que el archivo modelo_rostros.pkl fue generado correctamente.")
-        print(f"Rostros conocidos: {len(rostros_conocidos)}, Nombres conocidos: {len(nombres_conocidos)}")
-    else:
 # Ejemplo de uso:
 if __name__ == "__main__":
     # Ruta del archivo de modelo
