@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styles from "../styles/CardGrid.module.css";
 import AlumnoCard from "../componentes/AlumnoCard";
 import { Alumno } from "../types/alumno";
+import { AsistenciaAgrupada } from "../types/asistencia";
 
 interface Foto {
   id: number;
@@ -9,21 +10,10 @@ interface Foto {
   url: string[];
 }
 
-interface Registro {
-  entrada: string;
-  salida: string;
-}
-
-interface Asistencia {
-  id: number;
-  alumnos_id: number;
-  registro: Registro[];
-}
-
 interface CardGridProps {
   data: Alumno[];
   fotos: Foto[];
-  asistencias: Asistencia[];
+  asistencias: AsistenciaAgrupada[];
   gridHeight?: string;
   gridWidth?: string;
   columnCount?: number;
@@ -86,10 +76,13 @@ const CardGrid = ({
             {(() => {
               const alumno = data.find((a) => a.id === expandedId);
               if (!alumno) return null;
+              
               const alumnoFotos = fotos.filter((f) => f.alumno_id === alumno.id);
+              // Las asistencias ya están agrupadas por alumno
               const alumnoAsistencias = asistencias.filter(
                 (a) => a.alumnos_id === alumno.id
               );
+              
               return (
                 <AlumnoCard
                   alumno={alumno}
