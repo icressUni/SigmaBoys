@@ -72,15 +72,16 @@ def reconocimiento_imagen(ruta_imagen, rostros_conocidos, nombres_conocidos):
     
     # Mostrar resultados
     for (top, right, bottom, left), codificacion_rostro in zip(ubicaciones_rostros, codificaciones_rostros):
-        coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.7)  # Más permisivo
+        coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.7)
         nombre = "Desconocido"
         distancias_faciales = face_recognition.face_distance(rostros_conocidos, codificacion_rostro)
         mejor_coincidencia = np.argmin(distancias_faciales) if len(distancias_faciales) > 0 else -1
 
+        # Solo mostrar el nombre, sin la distancia
         if mejor_coincidencia >= 0 and coincidencias[mejor_coincidencia]:
-            nombre = f"{nombres_conocidos[mejor_coincidencia]} (distancia: {distancias_faciales[mejor_coincidencia]:.2f})"
+            nombre = nombres_conocidos[mejor_coincidencia]
         elif mejor_coincidencia >= 0 and distancias_faciales[mejor_coincidencia] < 0.6:
-            nombre = f"¿Quizás: {nombres_conocidos[mejor_coincidencia]}? (distancia: {distancias_faciales[mejor_coincidencia]:.2f})"
+            nombre = f"¿Quizás: {nombres_conocidos[mejor_coincidencia]}?"
         
         # Dibujar un rectángulo alrededor del rostro
         cv2.rectangle(imagen_rgb, (left, top), (right, bottom), (0, 255, 0), 2)
@@ -140,9 +141,9 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
                 mejor_coincidencia = np.argmin(distancias_faciales) if len(distancias_faciales) > 0 else -1
 
                 if mejor_coincidencia >= 0 and coincidencias[mejor_coincidencia]:
-                    nombre = f"{nombres_conocidos[mejor_coincidencia]} (distancia: {distancias_faciales[mejor_coincidencia]:.2f})"
+                    nombre = nombres_conocidos[mejor_coincidencia]
                 elif mejor_coincidencia >= 0 and distancias_faciales[mejor_coincidencia] < 0.6:
-                    nombre = f"¿Quizás: {nombres_conocidos[mejor_coincidencia]}? (distancia: {distancias_faciales[mejor_coincidencia]:.2f})"
+                    nombre = f"¿Quizás: {nombres_conocidos[mejor_coincidencia]}?"
                 
                 if nombre != "Desconocido":
                     rostro_seguido = nombre
@@ -207,13 +208,13 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
                 correos_real = {}
 
             correo = correos_real.get(rostro_seguido, f"{rostro_seguido.lower()}@ejemplo.com")
-            json_filename = f"registros_{fecha_str}.json"
 
+            # Crear carpeta 'registros' si no existe
+            registros_dir = "registros"
+            if not os.path.exists(registros_dir):
+                os.makedirs(registros_dir)
 
-#    ╔═══════════════════════════╗
-#   ║ Aqui va la coneccion       ║
-#   ╚═══════════════════════════╝
-
+            json_filename = os.path.join(registros_dir, f"registros_{fecha_str}.json")
 
             # Leer el archivo si existe, si no crear estructura vacía
             if os.path.exists(json_filename):

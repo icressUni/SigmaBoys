@@ -1,6 +1,13 @@
 import os
 import pickle
+import json
 import face_recognition
+
+# Carga de datos de alumnos desde JSON
+with open('alumnos_data.json', 'r', encoding='utf-8') as f:
+    alumnos_data = json.load(f)
+# Mapeo de IDs a nombres
+id_to_nombre = {alumno['id']: alumno['nombre'] for alumno in alumnos_data}
 
 def crear_y_guardar_modelo(directorio_personas, ruta_modelo):
     """
@@ -18,6 +25,9 @@ def crear_y_guardar_modelo(directorio_personas, ruta_modelo):
     for persona in os.listdir(directorio_autorizadas):
         ruta_persona = os.path.join(directorio_autorizadas, persona)
         if os.path.isdir(ruta_persona):
+            # Obtener nombre real del alumno a partir de su ID (nombre de carpeta)
+            nombre = id_to_nombre.get(persona, persona)
+            
             # Procesar imágenes en la carpeta principal y en la subcarpeta 'augmented'
             carpetas_a_procesar = [ruta_persona]
             ruta_augmented = os.path.join(ruta_persona, "augmented")
@@ -26,7 +36,7 @@ def crear_y_guardar_modelo(directorio_personas, ruta_modelo):
             
             for carpeta in carpetas_a_procesar:
                 for imagen_archivo in os.listdir(carpeta):
-                    if imagen_archivo.endswith(('.jpg', '.jpeg', '.png')):
+                    if imagen_archivo.lower().endswith(('.jpg', '.jpeg', '.png')):
                         ruta_completa = os.path.join(carpeta, imagen_archivo)
                         try:
                             # Cargar la imagen y encontrar codificación facial
@@ -36,8 +46,8 @@ def crear_y_guardar_modelo(directorio_personas, ruta_modelo):
                             # Si se encontró un rostro, agregarlo al modelo
                             if codificaciones:
                                 rostros_conocidos.append(codificaciones[0])
-                                nombres_conocidos.append(persona)
-                                print(f"Rostro de {persona} agregado al modelo desde {ruta_completa}")
+                                nombres_conocidos.append(nombre)
+                                print(f"Rostro de {nombre} agregado al modelo desde {ruta_completa}")
                             else:
                                 print(f"No se encontró ningún rostro en {ruta_completa}")
                         except Exception as e:
@@ -49,7 +59,7 @@ def crear_y_guardar_modelo(directorio_personas, ruta_modelo):
     print(f"Modelo guardado en {ruta_modelo}")
 
 if __name__ == "__main__":
-    # Directorio base que contiene la carpeta personas_autorizadas
+    # Directorio base que contiene la carpeta downloaded_files
     directorio_base = "./"
     modelo_dir = "./model"
     ruta_modelo = os.path.join(modelo_dir, "modelo_rostros.pkl")
