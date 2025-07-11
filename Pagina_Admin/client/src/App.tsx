@@ -63,7 +63,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const checkAuth = () => {
     const token = getStorageItem("token");
-    setIsAuthenticated(!!token);
+    const newAuthState = !!token;
+    
+    console.log("Verificando autenticación:", { token: !!token, isAuthenticated: newAuthState });
+    
+    setIsAuthenticated(newAuthState);
     if (!isInitialized) {
       setIsInitialized(true);
     }
@@ -75,6 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Listener para cambios en localStorage desde otras pestañas
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "token") {
+        console.log("Token cambió en localStorage:", e.newValue);
         checkAuth();
       }
     };
@@ -84,16 +89,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = (token: string) => {
+    console.log("Intentando hacer login con token:", token);
+    
     if (setStorageItem("token", token)) {
       setIsAuthenticated(true);
+      console.log("Login exitoso, estado actualizado");
     } else {
       console.error("No se pudo guardar el token");
     }
   };
 
   const logout = () => {
+    console.log("Cerrando sesión");
     removeStorageItem("token");
     setIsAuthenticated(false);
+    // Forzar una verificación inmediata del estado
+    setTimeout(() => {
+      setIsAuthenticated(false);
+    }, 0);
   };
 
   return (
@@ -110,7 +123,10 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   useEffect(() => {
     const checkAuth = () => {
       const token = getStorageItem("token");
-      setAuthState(token ? 'authenticated' : 'unauthenticated');
+      const newState = token ? 'authenticated' : 'unauthenticated';
+      
+      console.log("ProtectedRoute verificando auth:", { token: !!token, state: newState });
+      setAuthState(newState);
     };
 
     checkAuth();
@@ -135,9 +151,10 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Reducir el tiempo de carga inicial para evitar parpadeos
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1500);
+    }, 800); // Reducido de 1500 a 800ms
     return () => clearTimeout(timer);
   }, []);
 
