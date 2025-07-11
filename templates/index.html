@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Captura de Cámara</title>
+  <style>
+    video, canvas { display: block; margin: 10px auto; }
+    button, input { display: block; margin: 5px auto; padding: 8px; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center;">Captura de Cámara</h1>
+
+  <!-- Campos de usuario -->
+  <input id="nameInput" type="text" placeholder="Nombre completo" required />
+  <input id="emailInput" type="email" placeholder="Correo electrónico" required />
+
+  <!-- Vista previa de la cámara -->
+  <video id="video" width="640" height="480" autoplay playsinline></video>
+  <button id="snap" disabled>Tomar Foto</button>
+  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snapBtn = document.getElementById('snap');
+    const nameInput = document.getElementById('nameInput');
+    const emailInput = document.getElementById('emailInput');
+    const ctx = canvas.getContext('2d');
+
+    let cameraReady = false;
+
+    // 1. Solicitar permiso y arrancar cámara
+    window.addEventListener('load', () => {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          video.srcObject = stream;
+          cameraReady = true;
+          checkReady();
+        })
+        .catch(err => {
+          console.error('Error accediendo a la cámara:', err);
+          alert('No se pudo acceder a la cámara.');
+        });
+    });
+
+    // 2. Habilitar botón solo si nombre, email y cámara listos
+    function checkReady() {
+      const nameOk = nameInput.value.trim() !== '';
+      const emailOk = emailInput.checkValidity();
+      snapBtn.disabled = !(cameraReady && nameOk && emailOk);
+    }
+
+    nameInput.addEventListener('input', checkReady);
+    emailInput.addEventListener('input', checkReady);
+
+    // 3. Capturar y enviar foto y datos
+    snapBtn.addEventListener('click', () => {
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataURL = canvas.toDataURL('image/png');
+
+      fetch('/save_photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageData: dataURL,
+          name: nameInput.value.trim(),
+          email: emailInput.value.trim()
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert(`Guardado con ID: ${data.id}`);
+        } else {
+          alert('Error guardando la foto');
+        }
+      })
+      .catch(err => {
+        console.error('Error de fetch:', err);
+        alert('Error de comunicación con el servidor.');
+      });
+    });
+  </script>
+</body>
+</html>
