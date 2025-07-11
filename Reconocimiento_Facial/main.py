@@ -32,9 +32,9 @@ def conectar_db():
         print(f"Error al conectar con la base de datos: {e}")
         return None
 
-def obtener_alumno_id(nombre):
+def obtener_alumno_uuid(nombre):
     """
-    Obtiene el ID del alumno basado en su nombre (busca en nombre y apellido)
+    Obtiene el UUID del alumno basado en su nombre (busca en nombre y apellido)
     """
     conn = conectar_db()
     if not conn:
@@ -44,7 +44,7 @@ def obtener_alumno_id(nombre):
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         # Buscar por nombre completo o por coincidencia en nombre o apellido
         cursor.execute("""
-            SELECT id FROM alumnos 
+            SELECT uuid FROM alumnos 
             WHERE LOWER(CONCAT(nombre, ' ', apellido)) LIKE LOWER(%s)
             OR LOWER(nombre) LIKE LOWER(%s)
             OR LOWER(apellido) LIKE LOWER(%s)
@@ -54,7 +54,7 @@ def obtener_alumno_id(nombre):
         conn.close()
         
         if resultado:
-            return resultado['id']
+            return resultado['uuid']
         else:
             print(f"Alumno '{nombre}' no encontrado en la base de datos")
             return None
@@ -89,7 +89,7 @@ def guardar_registros_locales(registros):
         print(f"Error al guardar registros locales: {e}")
         return False
 
-def subir_asistencia_completa(alumno_id, entrada, salida):
+def subir_asistencia_completa(alumno_uuid, entrada, salida):
     """
     Sube un registro de asistencia completo (entrada y salida) a la base de datos
     """
@@ -100,12 +100,12 @@ def subir_asistencia_completa(alumno_id, entrada, salida):
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # Insertar registro completo con entrada y salida
+        # Insertar registro completo con entrada y salida usando UUID
         cursor.execute("""
             INSERT INTO asistencias (alumnos_id, entrada, salida) 
             VALUES (%s, %s, %s) 
             RETURNING id
-        """, (alumno_id, entrada, salida))
+        """, (alumno_uuid, entrada, salida))
         
         nuevo_id = cursor.fetchone()['id']
         conn.commit()
@@ -117,7 +117,7 @@ def subir_asistencia_completa(alumno_id, entrada, salida):
         conn.close()
         return False, f"Error al subir asistencia: {e}"
 
-def gestionar_asistencia(alumno_id):
+def gestionar_asistencia(alumno_uuid):
     """
     Gestiona el registro de asistencia local (entrada/salida) y sube cuando está completo
     """
@@ -128,12 +128,12 @@ def gestionar_asistencia(alumno_id):
     registros = cargar_registros_locales()
     
     # Crear estructura si no existe
-    if str(alumno_id) not in registros:
-        registros[str(alumno_id)] = {}
+    if str(alumno_uuid) not in registros:
+        registros[str(alumno_uuid)] = {}
     
     # Verificar si ya hay un registro de entrada para hoy
-    if fecha_hoy in registros[str(alumno_id)]:
-        registro_hoy = registros[str(alumno_id)][fecha_hoy]
+    if fecha_hoy in registros[str(alumno_uuid)]:
+        registro_hoy = registros[str(alumno_uuid)][fecha_hoy]
         
         if 'entrada' in registro_hoy and 'salida' not in registro_hoy:
             # Ya hay entrada, registrar salida y subir a BD
@@ -145,13 +145,13 @@ def gestionar_asistencia(alumno_id):
                 entrada_dt = datetime.fromisoformat(registro_hoy['entrada'])
                 salida_dt = timestamp_actual
                 
-                exito, mensaje = subir_asistencia_completa(alumno_id, entrada_dt, salida_dt)
+                exito, mensaje = subir_asistencia_completa(alumno_uuid, entrada_dt, salida_dt)
                 
                 if exito:
                     # Si se subió exitosamente, eliminar el registro local
-                    del registros[str(alumno_id)][fecha_hoy]
-                    if not registros[str(alumno_id)]:  # Si no quedan fechas, eliminar alumno
-                        del registros[str(alumno_id)]
+                    del registros[str(alumno_uuid)][fecha_hoy]
+                    if not registros[str(alumno_uuid)]:  # Si no quedan fechas, eliminar alumno
+                        del registros[str(alumno_uuid)]
                     guardar_registros_locales(registros)
                     return True, f"✅ SALIDA registrada: {timestamp_actual.strftime('%H:%M:%S')} - {mensaje}"
                 else:
@@ -162,7 +162,7 @@ def gestionar_asistencia(alumno_id):
             return False, "Ya existe un registro completo para hoy"
     else:
         # No hay registro para hoy, crear entrada
-        registros[str(alumno_id)][fecha_hoy] = {
+        registros[str(alumno_uuid)][fecha_hoy] = {
             'entrada': timestamp_actual.isoformat()
         }
         
@@ -178,7 +178,7 @@ def intentar_subir_registros_pendientes():
     registros = cargar_registros_locales()
     registros_eliminados = []
     
-    for alumno_id, fechas in registros.items():
+    for alumno_uuid, fechas in registros.items():
         fechas_a_eliminar = []
         for fecha, registro in fechas.items():
             if 'entrada' in registro and 'salida' in registro:
@@ -187,23 +187,23 @@ def intentar_subir_registros_pendientes():
                     entrada_dt = datetime.fromisoformat(registro['entrada'])
                     salida_dt = datetime.fromisoformat(registro['salida'])
                     
-                    exito, mensaje = subir_asistencia_completa(int(alumno_id), entrada_dt, salida_dt)
+                    exito, mensaje = subir_asistencia_completa(alumno_uuid, entrada_dt, salida_dt)
                     
                     if exito:
                         fechas_a_eliminar.append(fecha)
-                        print(f"✅ Registro subido: Alumno {alumno_id} - {fecha}")
+                        print(f"✅ Registro subido: Alumno UUID {alumno_uuid} - {fecha}")
                 except Exception as e:
-                    print(f"Error al procesar registro {alumno_id}/{fecha}: {e}")
+                    print(f"Error al procesar registro {alumno_uuid}/{fecha}: {e}")
         
         # Eliminar fechas que se subieron exitosamente
         for fecha in fechas_a_eliminar:
-            del registros[alumno_id][fecha]
-            registros_eliminados.append((alumno_id, fecha))
+            del registros[alumno_uuid][fecha]
+            registros_eliminados.append((alumno_uuid, fecha))
     
     # Eliminar alumnos que no tienen fechas pendientes
-    alumnos_a_eliminar = [alumno_id for alumno_id, fechas in registros.items() if not fechas]
-    for alumno_id in alumnos_a_eliminar:
-        del registros[alumno_id]
+    alumnos_a_eliminar = [alumno_uuid for alumno_uuid, fechas in registros.items() if not fechas]
+    for alumno_uuid in alumnos_a_eliminar:
+        del registros[alumno_uuid]
     
     if registros_eliminados:
         guardar_registros_locales(registros)
@@ -412,17 +412,17 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
             
             print(f"Procesando registro para: {nombre_limpio}")
             
-            # Obtener ID del alumno
-            alumno_id = obtener_alumno_id(nombre_limpio)
+            # Obtener UUID del alumno
+            alumno_uuid = obtener_alumno_uuid(nombre_limpio)
             
-            if alumno_id is None:
+            if alumno_uuid is None:
                 print(f"❌ Error: Alumno '{nombre_limpio}' no encontrado en la base de datos")
                 print("   Verifica que el nombre coincida exactamente con la base de datos")
                 ultimo_registro = tiempo_actual  # Actualizar para evitar spam
                 continue
             
             # Registrar asistencia
-            exito, mensaje = gestionar_asistencia(alumno_id)
+            exito, mensaje = gestionar_asistencia(alumno_uuid)
             
             if exito:
                 print(f"{mensaje}")
