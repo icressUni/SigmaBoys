@@ -1,14 +1,15 @@
 // src/pages/AdminDashboard.tsx
 import { useState, useRef, useEffect, useMemo } from "react";
-import SearchBar from "@components/SearchBar";
-import DropdownBar from "@components/DropdownBar";
-import CardGrid from "@components/CardGrid";
-import AddUserButton from "@components/AddUserButton"; // <-- NUEVA LÍNEA
+// import SearchBar from "../components/SearchBar";
+import SearchBar from "../componentes/SearchBar";
+import DropdownBar from "../componentes/DropdownBar";
+import CardGrid from "../componentes/CardGrid";
+import AddUserButton from "../componentes/AddUserButton"; // <-- NUEVA LÍNEA
 import styles from "../styles/AdminDashboard.module.css";
 import { useLanguage } from "../lenguage/LenguageContext";
 import { getAlumnos } from "../data/getAlumnos";
 import { getAsistencias } from "../data/getAsistencias";
-import { Alumno } from "../types/alumno";
+import { Alumno } from "../types/alumnos";
 import { Asistencia } from "../types/asistencia";
 
 const AdminDashboard = () => {

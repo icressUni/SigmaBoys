@@ -50,6 +50,7 @@
   font-size: 1rem;
   transition: border-color 0.2s ease;
   text-align: center; /* Centra el texto dentro del input */
+  box-sizing: border-box;
 }
 
 /* Placeholder en los inputs */
@@ -65,6 +66,13 @@
   box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
 }
 
+/* Estilo cuando el input está deshabilitado */
+.formControl:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 /* Botón de enviar o ingresar */
 button {
   width: 90%;
@@ -77,10 +85,17 @@ button {
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s ease;
+  box-sizing: border-box;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   background-color: #08306b;
+}
+
+button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Mensaje de error debajo del formulario */
@@ -93,6 +108,8 @@ button:hover {
   font-size: 1rem;
   text-align: center;
   width: 100%;
+  border: 1px solid #f5c6cb;
+  box-sizing: border-box;
 }
 
 /* Fondo del popup de éxito (pantalla completa) */
@@ -116,6 +133,9 @@ button:hover {
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  width: 400px;
+  box-sizing: border-box;
 }
 
 /* Título del popup */
@@ -136,4 +156,137 @@ button:hover {
 
 .popupContent button:hover {
   background-color: #0056b3;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablets y pantallas medianas (768px y menos) */
+@media (max-width: 768px) {
+  .formContainer {
+    max-width: 90%;
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .loginContainer h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .formControl {
+    width: 95%;
+    padding: 0.875rem;
+    font-size: 16px; /* Previene zoom automático en iOS */
+  }
+
+  button {
+    width: 95%;
+    padding: 0.875rem;
+    font-size: 1rem;
+  }
+
+  .alert {
+    font-size: 0.9rem;
+    padding: 0.625rem;
+  }
+
+  .popupContent {
+    padding: 1.5rem;
+    max-width: 95%;
+  }
+}
+
+/* Móviles (480px y menos) */
+@media (max-width: 480px) {
+  .formContainer {
+    max-width: 95%;
+    padding: 1rem;
+    margin: 0.5rem;
+    min-height: auto;
+  }
+
+  .loginContainer h2 {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .formGroup {
+    margin-bottom: 1rem;
+  }
+
+  .formControl {
+    width: 98%;
+    padding: 1rem;
+    font-size: 16px; /* Importante para iOS */
+    border-radius: 6px;
+  }
+
+  button {
+    width: 98%;
+    padding: 1rem;
+    font-size: 1rem;
+    border-radius: 6px;
+  }
+
+  .alert {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .popupContent {
+    padding: 1rem;
+    max-width: 98%;
+    border-radius: 8px;
+  }
+
+  .popupContent h2 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Móviles muy pequeños (360px y menos) */
+@media (max-width: 360px) {
+  .formContainer {
+    padding: 0.75rem;
+    margin: 0.25rem;
+  }
+
+  .loginContainer h2 {
+    font-size: 1.2rem;
+  }
+
+  .formControl,
+  button {
+    padding: 0.75rem;
+    font-size: 15px;
+  }
+
+  .alert {
+    font-size: 0.8rem;
+  }
+}
+
+/* Ajuste para pantallas muy altas (altura mínima) */
+@media (max-height: 600px) {
+  .formContainer {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 2rem auto;
+  }
+}
+
+/* Modo landscape en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+  .formContainer {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 1rem auto;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
 }
