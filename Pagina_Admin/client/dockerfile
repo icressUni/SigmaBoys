@@ -1,0 +1,25 @@
+# Etapa 1: Build
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+# Copiar package files
+COPY package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar código
+COPY . .
+
+# Build para producción
+RUN npm run build
+
+# Etapa 2: Nginx
+FROM nginx:alpine
+
+# Copiar build al directorio de nginx
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Exponer puerto 80
+EXPOSE 80
