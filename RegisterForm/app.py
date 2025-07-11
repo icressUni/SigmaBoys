@@ -399,5 +399,6 @@ def health_check():
     else:
         return jsonify({'status': 'error', 'message': 'No se puede conectar a la base de datos'}), 500
 
+# Por esto:
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, host='0.0.0.0', port=5000)

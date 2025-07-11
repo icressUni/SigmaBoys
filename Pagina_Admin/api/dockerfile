@@ -1,0 +1,14 @@
+# Usar imagen oficial de Deno
+FROM denoland/deno:latest
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos (excepto deno.lock)
+COPY . .
+
+# Exponer puerto
+EXPOSE 8000
+
+# Ejecutar aplicación (Deno descargará dependencias automáticamente)
+CMD ["deno", "run", "--allow-net", "--allow-env", "main.ts"]

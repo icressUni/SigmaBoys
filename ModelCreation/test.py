@@ -1,17 +1,56 @@
 import os
+import sys
+import socket
+import requests
+from dataclasses import dataclass
+from typing import List
 
-downloaded_files_path = os.path.join(os.path.dirname(__file__), '.', 'downloaded_files')
+@dataclass
+class Alumno:
+    id: int
+    nombre: str
+    apellido: str
+    correo: str
+    especialidad: str
 
-# Busca recursivamente todas las carpetas dentro de downloaded_files
-for root, dirs, files in os.walk(downloaded_files_path):
-    for dir_name in dirs:
-        print(dir_name)
+# URL base: primero busca API_URL, si no está, monta http://<hostname>:8000
+API_URL = os.getenv(
+    "API_URL",
+    f"http://{socket.gethostname()}:8000"
+)
 
-# Mostrar todas las imágenes dentro de la carpeta 'augmented'
-augmented_path = os.path.join(os.path.dirname(__file__), '.', 'augmented')
-image_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
+def get_alumnos() -> List[Alumno]:
+    """
+    Llama al endpoint /api/alumnos y devuelve la lista de alumnos.
+    Requiere que la variable de entorno TOKEN contenga un JWT válido.
+    """
+    token = os.getenv("TOKEN")
+    if not token:
+        raise RuntimeError("No se encontró TOKEN en las variables de entorno")
 
-for root, dirs, files in os.walk(augmented_path):
-    for file in files:
-        if file.lower().endswith(image_extensions):
-            print(os.path.join(root, file))
+    url = f"{API_URL}/api/alumnos"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {token}",
+    }
+
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 401:
+        # Token inválido / expirado
+        # Aquí podrías borrar el token de donde lo guardes, o pedir re-login
+        raise RuntimeError("Sesión expirada (401 Unauthorized)")
+    if not resp.ok:
+        raise RuntimeError(f"Error {resp.status_code}: {resp.text}")
+
+    alumnos_json = resp.json()
+    # Convertir cada dict a un objeto Alumno
+    return [Alumno(**item) for item in alumnos_json]
+
+if __name__ == "__main__":
+    try:
+        lista = get_alumnos()
+        for a in lista:
+            print(f"{a.id}: {a.nombre} {a.apellido} — {a.correo} ({a.especialidad})")
+    except Exception as e:
+        print("❌", e, file=sys.stderr)
+        sys.exit(1)
