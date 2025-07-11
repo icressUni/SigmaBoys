@@ -63,9 +63,35 @@ def obtener_alumno_id(nombre):
         conn.close()
         return None
 
-def gestionar_asistencia(alumno_id):
+def cargar_registros_locales():
     """
-    Gestiona el registro de asistencia (entrada/salida) en la base de datos
+    Carga los registros de asistencia almacenados localmente
+    """
+    archivo_registros = "./registros_asistencia.json"
+    if os.path.exists(archivo_registros):
+        try:
+            with open(archivo_registros, 'r') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def guardar_registros_locales(registros):
+    """
+    Guarda los registros de asistencia localmente
+    """
+    archivo_registros = "./registros_asistencia.json"
+    try:
+        with open(archivo_registros, 'w') as f:
+            json.dump(registros, f, indent=2, default=str)
+        return True
+    except Exception as e:
+        print(f"Error al guardar registros locales: {e}")
+        return False
+
+def subir_asistencia_completa(alumno_id, entrada, salida):
+    """
+    Sube un registro de asistencia completo (entrada y salida) a la base de datos
     """
     conn = conectar_db()
     if not conn:
@@ -73,50 +99,75 @@ def gestionar_asistencia(alumno_id):
     
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        timestamp_actual = datetime.now()
         
-        # Buscar si existe un registro de asistencia incompleto (solo entrada) para hoy
+        # Insertar registro completo con entrada y salida
         cursor.execute("""
-            SELECT id, entrada, salida 
-            FROM asistencias 
-            WHERE alumnos_id = %s 
-            AND DATE(entrada) = CURRENT_DATE 
-            AND salida IS NULL
-            ORDER BY entrada DESC 
-            LIMIT 1
-        """, (alumno_id,))
+            INSERT INTO asistencias (alumnos_id, entrada, salida) 
+            VALUES (%s, %s, %s) 
+            RETURNING id
+        """, (alumno_id, entrada, salida))
         
-        registro_incompleto = cursor.fetchone()
-        
-        if registro_incompleto:
-            # Existe un registro con solo entrada, marcar salida
-            cursor.execute("""
-                UPDATE asistencias 
-                SET salida = %s 
-                WHERE id = %s
-            """, (timestamp_actual, registro_incompleto['id']))
-            
-            conn.commit()
-            conn.close()
-            return True, f"Salida registrada exitosamente a las {timestamp_actual.strftime('%H:%M:%S')}"
-        
-        else:
-            # No hay registro incompleto, crear nuevo registro de entrada
-            cursor.execute("""
-                INSERT INTO asistencias (alumnos_id, entrada) 
-                VALUES (%s, %s) 
-                RETURNING id
-            """, (alumno_id, timestamp_actual))
-            
-            nuevo_id = cursor.fetchone()['id']
-            conn.commit()
-            conn.close()
-            return True, f"Entrada registrada exitosamente a las {timestamp_actual.strftime('%H:%M:%S')} (ID: {nuevo_id})"
+        nuevo_id = cursor.fetchone()['id']
+        conn.commit()
+        conn.close()
+        return True, f"Asistencia completa subida exitosamente (ID: {nuevo_id})"
     
     except Exception as e:
         conn.rollback()
         conn.close()
-        return False, f"Error al registrar asistencia: {e}"
+        return False, f"Error al subir asistencia: {e}"
+
+def gestionar_asistencia(alumno_id):
+    """
+    Gestiona el registro de asistencia local (entrada/salida) y sube cuando está completo
+    """
+    timestamp_actual = datetime.now()
+    fecha_hoy = timestamp_actual.strftime('%Y-%m-%d')
+    
+    # Cargar registros locales
+    registros = cargar_registros_locales()
+    
+    # Crear estructura si no existe
+    if str(alumno_id) not in registros:
+        registros[str(alumno_id)] = {}
+    
+    # Verificar si ya hay un registro de entrada para hoy
+    if fecha_hoy in registros[str(alumno_id)]:
+        registro_hoy = registros[str(alumno_id)][fecha_hoy]
+        
+        if 'entrada' in registro_hoy and 'salida' not in registro_hoy:
+            # Ya hay entrada, registrar salida y subir a BD
+            registro_hoy['salida'] = timestamp_actual.isoformat()
+            
+            # Guardar localmente
+            if guardar_registros_locales(registros):
+                # Intentar subir a la base de datos
+                entrada_dt = datetime.fromisoformat(registro_hoy['entrada'])
+                salida_dt = timestamp_actual
+                
+                exito, mensaje = subir_asistencia_completa(alumno_id, entrada_dt, salida_dt)
+                
+                if exito:
+                    # Si se subió exitosamente, eliminar el registro local
+                    del registros[str(alumno_id)][fecha_hoy]
+                    guardar_registros_locales(registros)
+                    return True, f"✅ SALIDA registrada: {timestamp_actual.strftime('%H:%M:%S')} - {mensaje}"
+                else:
+                    return True, f"⚠️ SALIDA guardada localmente: {timestamp_actual.strftime('%H:%M:%S')} - Se subirá cuando haya conexión"
+            else:
+                return False, "Error al guardar registro local"
+        else:
+            return False, "Ya existe un registro completo para hoy"
+    else:
+        # No hay registro para hoy, crear entrada
+        registros[str(alumno_id)][fecha_hoy] = {
+            'entrada': timestamp_actual.isoformat()
+        }
+        
+        if guardar_registros_locales(registros):
+            return True, f"📥 ENTRADA registrada localmente: {timestamp_actual.strftime('%H:%M:%S')} - Esperando salida"
+        else:
+            return False, "Error al guardar entrada local"
 
 def crear_base_de_datos_rostros(directorio_personas):
     """
@@ -344,6 +395,51 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
     captura.release()
     cv2.destroyAllWindows()
 
+def intentar_subir_registros_pendientes():
+    """
+    Intenta subir todos los registros pendientes que están completos
+    """
+    registros = cargar_registros_locales()
+    registros_eliminados = []
+    
+    for alumno_id, fechas in registros.items():
+        for fecha, registro in fechas.items():
+            if 'entrada' in registro and 'salida' in registro:
+                # Registro completo, intentar subir
+                try:
+                    entrada_dt = datetime.fromisoformat(registro['entrada'])
+                    salida_dt = datetime.fromisoformat(registro['salida'])
+                    
+                    exito, mensaje = subir_asistencia_completa(int(alumno_id), entrada_dt, salida_dt)
+                    
+                    if exito:
+                        registros_eliminados.append((alumno_id, fecha))
+                        print(f"✅ Registro subido: Alumno {alumno_id} - {fecha}")
+                except Exception as e:
+                    print(f"Error al procesar registro {alumno_id}/{fecha}: {e}")
+    
+    # Eliminar registros que se subieron exitosamente
+    for alumno_id, fecha in registros_eliminados:
+        del registros[alumno_id][fecha]
+        if not registros[alumno_id]:  # Si no quedan fechas, eliminar alumno
+            del registros[alumno_id]
+    
+    if registros_eliminados:
+        guardar_registros_locales(registros)
+        print(f"Se subieron {len(registros_eliminados)} registros pendientes")
+    
+    return len(registros_eliminados)
+    # Ruta del archivo de modelo
+    ruta_modelo = "./model/modelo_rostros.pkl"
+    
+    # Cargar el modelo
+    rostros_conocidos, nombres_conocidos = cargar_modelo(ruta_modelo)
+    
+    # Verificar si el modelo contiene datos
+    if not rostros_conocidos or not nombres_conocidos:
+        print("El modelo está vacío o no contiene datos válidos. Verifica que el archivo modelo_rostros.pkl fue generado correctamente.")
+        print(f"Rostros conocidos: {len(rostros_conocidos)}, Nombres conocidos: {len(nombres_conocidos)}")
+    else:
 # Ejemplo de uso:
 if __name__ == "__main__":
     # Ruta del archivo de modelo
@@ -360,14 +456,28 @@ if __name__ == "__main__":
         print(f"Modelo cargado correctamente. Rostros conocidos: {len(rostros_conocidos)}, Nombres conocidos: {len(nombres_conocidos)}")
         print("Verificando conexión a la base de datos...")
         
-        # Probar conexión a la base de datos
+        # Probar conexión a la base de datos e intentar subir registros pendientes
         conn_test = conectar_db()
         if conn_test:
             print("✅ Conexión a PostgreSQL establecida correctamente")
             conn_test.close()
             
+            # Intentar subir registros pendientes
+            print("Verificando registros pendientes...")
+            registros_subidos = intentar_subir_registros_pendientes()
+            
+            if registros_subidos > 0:
+                print(f"✅ Se subieron {registros_subidos} registros pendientes")
+            else:
+                print("No hay registros pendientes para subir")
+            
             # Iniciar reconocimiento en tiempo real
+            print("\nIniciando reconocimiento facial...")
             reconocimiento_camara(rostros_conocidos, nombres_conocidos)
         else:
             print("❌ Error: No se pudo conectar a la base de datos PostgreSQL")
+            print("   El sistema funcionará en modo offline - los registros se guardarán localmente")
             print("   Verifica la configuración de conexión")
+            
+            # Funcionar en modo offline
+            reconocimiento_camara(rostros_conocidos, nombres_conocidos)
