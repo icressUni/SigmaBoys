@@ -205,6 +205,12 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
             correo = correos_real.get(rostro_seguido, f"{rostro_seguido.lower()}@ejemplo.com")
             json_filename = f"registros_{fecha_str}.json"
 
+
+#    ╔═══════════════════════════╗
+#   ║ Aqui va la coneccion       ║
+#   ╚═══════════════════════════╝
+
+
             # Leer el archivo si existe, si no crear estructura vacía
             if os.path.exists(json_filename):
                 with open(json_filename, "r") as f:
