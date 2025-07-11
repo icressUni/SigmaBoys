@@ -1,5 +1,5 @@
 # Instalación previa necesaria:
-# pip install face_recognition opencv-python numpy
+# pip install face_recognition opencv-python numpy psycopg2-binary
 
 import face_recognition
 import cv2
@@ -8,6 +8,115 @@ import os
 import pickle
 import json
 from datetime import datetime
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import time
+
+# Configuración de la base de datos
+DB_CONFIG = {
+    'host': 'ep-rapid-glitter-aaxbrr0d-pooler.westus3.azure.neon.tech',
+    'database': 'alumnos_db',
+    'user': 'alumnos_db_owner',
+    'password': 'npg_S7BvNrnaRLy5',
+    'sslmode': 'require'
+}
+
+def conectar_db():
+    """
+    Establece conexión con la base de datos PostgreSQL
+    """
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        return conn
+    except Exception as e:
+        print(f"Error al conectar con la base de datos: {e}")
+        return None
+
+def obtener_alumno_uuid(nombre):
+    """
+    Obtiene el UUID del alumno basado en su nombre (busca en nombre y apellido)
+    """
+    conn = conectar_db()
+    if not conn:
+        return None
+    
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        # Buscar por nombre completo o por coincidencia en nombre o apellido
+        cursor.execute("""
+            SELECT uuid FROM alumnos 
+            WHERE LOWER(CONCAT(nombre, ' ', apellido)) LIKE LOWER(%s)
+            OR LOWER(nombre) LIKE LOWER(%s)
+            OR LOWER(apellido) LIKE LOWER(%s)
+            LIMIT 1
+        """, (f'%{nombre}%', f'%{nombre}%', f'%{nombre}%'))
+        resultado = cursor.fetchone()
+        conn.close()
+        
+        if resultado:
+            return resultado['uuid']
+        else:
+            print(f"Alumno '{nombre}' no encontrado en la base de datos")
+            return None
+    except Exception as e:
+        print(f"Error al buscar alumno: {e}")
+        conn.close()
+        return None
+
+def gestionar_asistencia(alumno_uuid):
+    """
+    Gestiona el registro de asistencia (entrada/salida) en la base de datos
+    """
+    conn = conectar_db()
+    if not conn:
+        return False, "Error de conexión a la base de datos"
+    
+    try:
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        timestamp_actual = datetime.now()
+        
+        # Buscar si existe un registro de asistencia incompleto (solo entrada) para hoy
+        cursor.execute("""
+            SELECT id, entrada, salida 
+            FROM asistencias 
+            WHERE alumnos_id = %s 
+            AND DATE(entrada) = CURRENT_DATE 
+            AND salida IS NULL
+            ORDER BY entrada DESC 
+            LIMIT 1
+        """, (alumno_uuid,))
+        
+        registro_incompleto = cursor.fetchone()
+        
+        if registro_incompleto:
+            # Existe un registro con solo entrada, marcar salida
+            cursor.execute("""
+                UPDATE asistencias 
+                SET salida = %s 
+                WHERE id = %s
+            """, (timestamp_actual, registro_incompleto['id']))
+            
+            conn.commit()
+            conn.close()
+            return True, f"Salida registrada exitosamente a las {timestamp_actual.strftime('%H:%M:%S')}"
+        
+        else:
+            # No hay registro incompleto, crear nuevo registro de entrada
+            cursor.execute("""
+                INSERT INTO asistencias (alumnos_id, entrada) 
+                VALUES (%s, %s) 
+                RETURNING id
+            """, (alumno_uuid, timestamp_actual))
+            
+            nuevo_id = cursor.fetchone()['id']
+            conn.commit()
+            conn.close()
+            return True, f"Entrada registrada exitosamente a las {timestamp_actual.strftime('%H:%M:%S')} (ID: {nuevo_id})"
+    
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return False, f"Error al registrar asistencia: {e}"
 
 def crear_base_de_datos_rostros(directorio_personas):
     """
@@ -98,7 +207,7 @@ def reconocimiento_imagen(ruta_imagen, rostros_conocidos, nombres_conocidos):
 
 def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
     """
-    Realiza reconocimiento facial usando la cámara web.
+    Realiza reconocimiento facial usando la cámara web con protección contra registros duplicados.
     """
     # Iniciar la cámara web
     captura = cv2.VideoCapture(0)
@@ -108,14 +217,14 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
         return
     
     print("Presiona 'q' para salir")
-    print("Presiona 'r' para guardar JSON de la persona identificada")
-
-    # Diccionario de correos de ejemplo (ajusta según tus datos reales)
-    correos = {nombre: f"{nombre.lower()}@ejemplo.com" for nombre in nombres_conocidos}
+    print("Presiona 'r' para registrar asistencia de la persona identificada")
+    print("=" * 60)
 
     rostro_seguido = None
     ubicacion_seguida = None
     tiempo_espera = 0
+    ultimo_registro = 0  # Timestamp del último registro para evitar duplicados
+    COOLDOWN_REGISTRO = 3  # Segundos de espera entre registros
     
     while True:
         ret, frame = captura.read()
@@ -130,9 +239,6 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
             # Encontrar rostros en el frame actual
             ubicaciones_rostros = face_recognition.face_locations(rgb_small_frame)
             codificaciones_rostros = face_recognition.face_encodings(rgb_small_frame, ubicaciones_rostros)
-            
-            if not codificaciones_rostros:
-                print("No se detectaron rostros en el cuadro. Intenta mejorar la iluminación.")
             
             for ubicacion, codificacion_rostro in zip(ubicaciones_rostros, codificaciones_rostros):
                 coincidencias = face_recognition.compare_faces(rostros_conocidos, codificacion_rostro, tolerance=0.7)
@@ -154,7 +260,7 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
                     # Seguir al rostro desconocido hasta que salga del cuadro
                     rostro_seguido = "Desconocido"
                     ubicacion_seguida = ubicacion
-                    print("Rostro desconocido detectado, siguiendo hasta que salga del cuadro.")
+                    print("Rostro desconocido detectado")
                     break
         elif tiempo_espera > 0:
             tiempo_espera -= 1
@@ -187,6 +293,12 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
             cv2.rectangle(frame, (left, bottom - 35), (right, bottom), color, cv2.FILLED)
             font = cv2.FONT_HERSHEY_DUPLEX
             cv2.putText(frame, rostro_seguido, (left + 6, bottom - 6), font, 0.8, (255, 255, 255), 1)
+            
+            # Mostrar tiempo restante de cooldown si aplica
+            tiempo_actual = time.time()
+            if (tiempo_actual - ultimo_registro) < COOLDOWN_REGISTRO:
+                tiempo_restante = COOLDOWN_REGISTRO - (tiempo_actual - ultimo_registro)
+                cv2.putText(frame, f"Espera: {tiempo_restante:.1f}s", (10, 30), font, 0.7, (0, 255, 255), 2)
         
         # Mostrar el frame resultante
         cv2.imshow('Reconocimiento Facial en Vivo', frame)
@@ -195,47 +307,38 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
         if key == ord('q'):
             break
         elif key == ord('r') and rostro_seguido and rostro_seguido != "Desconocido":
-            # Obtener hora y fecha actual
-            hora_actual = datetime.now()
-            hora_str = hora_actual.strftime("%H:%M:%S")
-            fecha_str = hora_actual.strftime("%Y-%m-%d")
-
-            # Cargar correos reales desde emails.json
-            try:
-                with open("emails.json", "r") as f:
-                    correos_real = json.load(f)
-            except Exception:
-                correos_real = {}
-
-            correo = correos_real.get(rostro_seguido, f"{rostro_seguido.lower()}@ejemplo.com")
-
-            # Crear carpeta 'registros' si no existe
-            registros_dir = "registros"
-            if not os.path.exists(registros_dir):
-                os.makedirs(registros_dir)
-
-            json_filename = os.path.join(registros_dir, f"registros_{fecha_str}.json")
-
-            # Leer el archivo si existe, si no crear estructura vacía
-            if os.path.exists(json_filename):
-                with open(json_filename, "r") as f:
-                    data = json.load(f)
+            # Verificar cooldown para evitar registros duplicados
+            tiempo_actual = time.time()
+            if (tiempo_actual - ultimo_registro) < COOLDOWN_REGISTRO:
+                tiempo_restante = COOLDOWN_REGISTRO - (tiempo_actual - ultimo_registro)
+                print(f"⚠️  Espera {tiempo_restante:.1f} segundos antes del próximo registro")
+                continue
+            
+            # Limpiar el nombre de caracteres especiales si los hay
+            nombre_limpio = rostro_seguido.split("(")[0].strip() if "(" in rostro_seguido else rostro_seguido
+            
+            print(f"Procesando registro para: {nombre_limpio}")
+            
+            # Obtener UUID del alumno
+            alumno_uuid = obtener_alumno_uuid(nombre_limpio)
+            
+            if alumno_uuid is None:
+                print(f"❌ Error: Alumno '{nombre_limpio}' no encontrado en la base de datos")
+                print("   Verifica que el nombre coincida exactamente con la base de datos")
+                ultimo_registro = tiempo_actual  # Actualizar para evitar spam
+                continue
+            
+            # Registrar asistencia
+            exito, mensaje = gestionar_asistencia(alumno_uuid)
+            
+            if exito:
+                print(f"✅ {mensaje}")
             else:
-                data = {}
-
-            # Estructura: correo, nombre, y registros
-            if correo not in data:
-                data[correo] = {
-                    "nombre": rostro_seguido,
-                    "registros": []
-                }
-            # Solo agregar la hora a la lista de registros
-            data[correo]["registros"].append(hora_str)
-
-            # Guardar el archivo actualizado
-            with open(json_filename, "w") as f:
-                json.dump(data, f, indent=4, ensure_ascii=False)
-            print(f"Registro guardado bajo el correo {correo} en {json_filename}")
+                print(f"❌ {mensaje}")
+                print("   Intenta registrar nuevamente")
+            
+            ultimo_registro = tiempo_actual
+            print("-" * 60)
     
     # Liberar recursos
     captura.release()
@@ -255,9 +358,16 @@ if __name__ == "__main__":
         print(f"Rostros conocidos: {len(rostros_conocidos)}, Nombres conocidos: {len(nombres_conocidos)}")
     else:
         print(f"Modelo cargado correctamente. Rostros conocidos: {len(rostros_conocidos)}, Nombres conocidos: {len(nombres_conocidos)}")
+        print("Verificando conexión a la base de datos...")
         
-        # 3. Para reconocimiento en una imagen:
-        # reconocimiento_imagen("ruta_a_la_imagen.jpg", rostros_conocidos, nombres_conocidos)
-        
-        # 4. Para reconocimiento en tiempo real con la cámara:
-        reconocimiento_camara(rostros_conocidos, nombres_conocidos)
+        # Probar conexión a la base de datos
+        conn_test = conectar_db()
+        if conn_test:
+            print("✅ Conexión a PostgreSQL establecida correctamente")
+            conn_test.close()
+            
+            # Iniciar reconocimiento en tiempo real
+            reconocimiento_camara(rostros_conocidos, nombres_conocidos)
+        else:
+            print("❌ Error: No se pudo conectar a la base de datos PostgreSQL")
+            print("   Verifica la configuración de conexión")
