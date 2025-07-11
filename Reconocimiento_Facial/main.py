@@ -32,9 +32,9 @@ def conectar_db():
         print(f"Error al conectar con la base de datos: {e}")
         return None
 
-def obtener_alumno_uuid(nombre):
+def obtener_alumno_id(nombre):
     """
-    Obtiene el UUID del alumno basado en su nombre (busca en nombre y apellido)
+    Obtiene el ID del alumno basado en su nombre (busca en nombre y apellido)
     """
     conn = conectar_db()
     if not conn:
@@ -44,7 +44,7 @@ def obtener_alumno_uuid(nombre):
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         # Buscar por nombre completo o por coincidencia en nombre o apellido
         cursor.execute("""
-            SELECT uuid FROM alumnos 
+            SELECT id FROM alumnos 
             WHERE LOWER(CONCAT(nombre, ' ', apellido)) LIKE LOWER(%s)
             OR LOWER(nombre) LIKE LOWER(%s)
             OR LOWER(apellido) LIKE LOWER(%s)
@@ -54,7 +54,7 @@ def obtener_alumno_uuid(nombre):
         conn.close()
         
         if resultado:
-            return resultado['uuid']
+            return resultado['id']
         else:
             print(f"Alumno '{nombre}' no encontrado en la base de datos")
             return None
@@ -63,7 +63,7 @@ def obtener_alumno_uuid(nombre):
         conn.close()
         return None
 
-def gestionar_asistencia(alumno_uuid):
+def gestionar_asistencia(alumno_id):
     """
     Gestiona el registro de asistencia (entrada/salida) en la base de datos
     """
@@ -84,7 +84,7 @@ def gestionar_asistencia(alumno_uuid):
             AND salida IS NULL
             ORDER BY entrada DESC 
             LIMIT 1
-        """, (alumno_uuid,))
+        """, (alumno_id,))
         
         registro_incompleto = cursor.fetchone()
         
@@ -106,7 +106,7 @@ def gestionar_asistencia(alumno_uuid):
                 INSERT INTO asistencias (alumnos_id, entrada) 
                 VALUES (%s, %s) 
                 RETURNING id
-            """, (alumno_uuid, timestamp_actual))
+            """, (alumno_id, timestamp_actual))
             
             nuevo_id = cursor.fetchone()['id']
             conn.commit()
@@ -319,17 +319,17 @@ def reconocimiento_camara(rostros_conocidos, nombres_conocidos):
             
             print(f"Procesando registro para: {nombre_limpio}")
             
-            # Obtener UUID del alumno
-            alumno_uuid = obtener_alumno_uuid(nombre_limpio)
+            # Obtener ID del alumno
+            alumno_id = obtener_alumno_id(nombre_limpio)
             
-            if alumno_uuid is None:
+            if alumno_id is None:
                 print(f"❌ Error: Alumno '{nombre_limpio}' no encontrado en la base de datos")
                 print("   Verifica que el nombre coincida exactamente con la base de datos")
                 ultimo_registro = tiempo_actual  # Actualizar para evitar spam
                 continue
             
             # Registrar asistencia
-            exito, mensaje = gestionar_asistencia(alumno_uuid)
+            exito, mensaje = gestionar_asistencia(alumno_id)
             
             if exito:
                 print(f"✅ {mensaje}")
