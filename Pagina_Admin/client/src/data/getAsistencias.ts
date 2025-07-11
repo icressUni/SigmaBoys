@@ -1,33 +1,39 @@
-// data/getAsistencias.ts
-export const getAsistencias = async () => {
+// src/data/getAsistencias.ts
+import { Asistencia } from "../types/asistencia";
+
+const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
+
+export async function getAsistencias(): Promise<Asistencia[]> {
   try {
-    const response = await fetch("http://localhost:8000/api/asistencias");
-    if (!response.ok) throw new Error("Error al obtener asistencias");
-
-    const data = await response.json();
-
-    // Agrupar registros por alumno
-    const agrupado: Record<number, { alumnos_id: number; registro: { entrada: string; salida: string }[] }> = {};
-
-    for (const row of data) {
-      const id = row.alumnos_id;
-      if (!agrupado[id]) {
-        agrupado[id] = {
-          alumnos_id: id,
-          registro: [],
-        };
-      }
-
-      agrupado[id].registro.push({
-        entrada: row.entrada,
-        salida: row.salida,
-      });
+    // Obtener token del localStorage
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      throw new Error("No hay token de autenticación");
     }
 
-    // Convertimos el objeto en array
-    return Object.values(agrupado);
+    const response = await fetch(`${API_URL}/api/asistencias`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token inválido, limpiar localStorage
+        localStorage.removeItem("token");
+        window.location.href = "/";
+        throw new Error("Sesión expirada");
+      }
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error(error);
-    return [];
+    console.error("Error al obtener asistencias:", error);
+    throw error;
   }
-};
+}

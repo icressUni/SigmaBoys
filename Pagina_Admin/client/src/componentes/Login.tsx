@@ -46,11 +46,14 @@ const Login: React.FC<LoginProps> = ({ backgroundColor, mode }) => {
       return;
     }
 
-    const API_URL = process.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
+    // ✅ CORREGIDO: Usar import.meta.env en lugar de process.env
+    const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
+
+    console.log("Intentando login con:", { correo, API_URL });
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch(`${API_URL}/api/login`, {
         method: "POST",
@@ -64,31 +67,39 @@ const Login: React.FC<LoginProps> = ({ backgroundColor, mode }) => {
 
       clearTimeout(timeoutId);
 
+      console.log("Respuesta del servidor:", res.status, res.statusText);
+
       // Verificar si la respuesta es JSON válida
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
+        const textResponse = await res.text();
+        console.error("Respuesta no JSON:", textResponse);
         throw new Error("Respuesta del servidor no válida");
       }
 
       if (res.status === 200) {
         const data = await res.json();
+        console.log("Datos recibidos:", data);
+        
         if (data.token) {
+          console.log("Token recibido, iniciando sesión");
           login(data.token);
-          // Pequeño delay para asegurar que el contexto se actualice
+          // Dar tiempo al contexto para actualizar
           setTimeout(() => {
             navigate("/admin-dashboard", { replace: true });
-            // Forzar recarga de la página como último recurso
-            window.location.href = "/admin-dashboard";
           }, 100);
         } else {
           setError("Error en la respuesta del servidor: token no encontrado");
         }
       } else if (res.status === 401) {
-        setError(translations.loginError || "Correo o contraseña incorrectos");
+        const errorData = await res.json().catch(() => ({}));
+        setError(errorData.message || translations.loginError || "Correo o contraseña incorrectos");
       } else if (res.status === 500) {
-        setError("Error interno del servidor. Intente más tarde.");
+        const errorData = await res.json().catch(() => ({}));
+        setError(errorData.message || "Error interno del servidor. Intente más tarde.");
       } else {
-        setError(`Error del servidor (${res.status}). Intente más tarde.`);
+        const errorData = await res.json().catch(() => ({}));
+        setError(errorData.message || `Error del servidor (${res.status}). Intente más tarde.`);
       }
     } catch (error: any) {
       console.error('Login error:', error);

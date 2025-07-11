@@ -8,10 +8,19 @@ function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Solo redirigir si el usuario está autenticado
+    // y evitar redirecciones múltiples
     if (isAuthenticated) {
+      console.log("Usuario autenticado, redirigiendo al dashboard");
       navigate("/admin-dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
+
+  // No mostrar el componente Login si el usuario ya está autenticado
+  // para evitar parpadeos
+  if (isAuthenticated) {
+    return null; // O puedes retornar un LoadingScreen aquí
+  }
 
   return (
     <main className="centered">

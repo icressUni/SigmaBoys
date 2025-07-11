@@ -1,12 +1,39 @@
-// data/getAlumnos.ts
-export const getAlumnos = async () => {
+// src/data/getAlumnos.ts
+import { Alumno } from "../types/alumnos";
+
+const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
+
+export async function getAlumnos(): Promise<Alumno[]> {
   try {
-    const response = await fetch("http://localhost:8000/api/alumnos");
-    if (!response.ok) throw new Error("Error al obtener alumnos");
+    // Obtener token del localStorage
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      throw new Error("No hay token de autenticación");
+    }
+
+    const response = await fetch(`${API_URL}/api/alumnos`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        // Token inválido, limpiar localStorage
+        localStorage.removeItem("token");
+        window.location.href = "/";
+        throw new Error("Sesión expirada");
+      }
+      throw new Error(`Error ${response.status}: ${response.statusText}`);
+    }
+
     const data = await response.json();
-    return data; // asumiendo que data ya es un array de alumnos
+    return data;
   } catch (error) {
-    console.error(error);
-    return [];
+    console.error("Error al obtener alumnos:", error);
+    throw error;
   }
-};
+}

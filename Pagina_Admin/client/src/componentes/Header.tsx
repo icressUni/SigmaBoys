@@ -1,19 +1,21 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styles from "../styles/Header.module.css";
 import LanguageSelector from "./LenguageSelector";
 import { useLanguage } from "../lenguage/LenguageContext";
+import { AuthContext } from "../App";
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { translations } = useLanguage();
-
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const { isAuthenticated, logout } = useContext(AuthContext);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
+    // Usar la función logout del contexto en lugar de manipular localStorage directamente
+    logout();
+    // Navegación inmediata sin esperar
+    navigate("/", { replace: true });
   };
 
   const handleGoBack = () => navigate(-1);
@@ -22,7 +24,7 @@ const Header: React.FC = () => {
     <header className={styles.header}>
       {/* Zona izquierda: Logout o Volver */}
       <div className={styles.left}>
-        {isLoggedIn ? (
+        {isAuthenticated ? (
           <button
             onClick={handleLogout}
             className={styles.iconButton}
