@@ -1,0 +1,23 @@
+[
+  {
+    "id": "75aa2441-0978-427e-a384-950398dd9aad",
+    "nombre": "Cristobal",
+    "apellido": "Salgado",
+    "correo": "crsalgado@alumnos.uai.cl",
+    "especialidad": "Informática"
+  },
+  {
+    "id": "cbed1dd4-ef9a-4e4e-8e5a-2f4b305559a3",
+    "nombre": "Javier",
+    "apellido": "Díaz",
+    "correo": "crsalgadod@gmail.com",
+    "especialidad": "Otro"
+  },
+  {
+    "id": "f36d7128-b652-4b16-8479-2bad9758ca56",
+    "nombre": "Felipe",
+    "apellido": "Cespedes",
+    "correo": "felicespedes@alumnos.uai.cl",
+    "especialidad": "Informática"
+  }
+]
